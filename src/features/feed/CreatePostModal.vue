@@ -4,8 +4,10 @@ import type { PostCategory } from '@/types'
 import { CATEGORY_LABELS } from '@/types'
 import { useFeedStore } from '@/stores/useFeedStore'
 import { useProgressStore } from '@/stores/useProgressStore'
-import { currentUser } from '@/mocks/user'
+import { useAuthStore } from '@/stores/useAuthStore'
 import { X, Image, Eye, Edit3 } from '@lucide/vue'
+
+const auth = useAuthStore()
 
 const emit = defineEmits<{ close: [] }>()
 
@@ -77,8 +79,8 @@ async function submitPost() {
           <!-- Edit mode -->
           <div v-if="!showPreview" class="modal-form">
             <div class="user-row">
-              <img :src="currentUser.avatarUrl" :alt="currentUser.name" class="avatar" width="40" height="40" />
-              <span class="user-name">{{ currentUser.name }}</span>
+              <img :src="auth.user?.avatarUrl" :alt="auth.user?.name" class="avatar" width="40" height="40" />
+              <span class="user-name">{{ auth.user?.name }}</span>
             </div>
 
             <textarea
@@ -116,9 +118,9 @@ async function submitPost() {
           <div v-else class="modal-preview">
             <div class="preview-card">
               <div class="post-header">
-                <img :src="currentUser.avatarUrl" :alt="currentUser.name" class="avatar" width="40" height="40" />
+                <img :src="auth.user?.avatarUrl" :alt="auth.user?.name" class="avatar" width="40" height="40" />
                 <div>
-                  <div class="author-name">{{ currentUser.name }}</div>
+                  <div class="author-name">{{ auth.user?.name }}</div>
                   <div class="post-time">agora mesmo</div>
                 </div>
               </div>

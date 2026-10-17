@@ -1,31 +1,92 @@
-<script setup lang="ts">
-import { computed } from 'vue'
-import { useFeedStore } from '@/stores/useFeedStore'
-import { useProgressStore } from '@/stores/useProgressStore'
-import { currentUser } from '@/mocks/user'
-import PostCard from '@/features/feed/PostCard.vue'
-import { formatDate } from '@/utils/date'
-import { Trophy, FileText, CheckCircle, Award } from '@lucide/vue'
+﻿<script setup lang="ts">
+import { computed, ref, watch } from "vue"
+import { useFeedStore } from "@/stores/useFeedStore"
+import { useProgressStore } from "@/stores/useProgressStore"
+import { useAuthStore } from "@/stores/useAuthStore"
+import PostCard from "@/features/feed/PostCard.vue"
+import { formatDate } from "@/utils/date"
+import { Trophy, FileText, CheckCircle, Award, Pencil, Camera, X, Check, LogOut } from "@lucide/vue"
+import { useRouter } from "vue-router"
 
 const feed = useFeedStore()
 const progress = useProgressStore()
+const auth = useAuthStore()
+const router = useRouter()
+
+const user = computed(() => auth.user!)
 
 const userPosts = computed(() =>
-  feed.posts.filter(p => p.authorId === currentUser.id)
+  feed.posts.filter(p => p.authorId === user.value.id)
 )
 
 const emojiForLevel = (icon: string) =>
-  icon === 'Sprout' ? '🌱' :
-  icon === 'Leaf' ? '🍃' :
-  icon === 'Trees' ? '🌳' :
-  icon === 'Globe' ? '🌍' : '🌿'
+  icon === "Sprout" ? "🌱" :
+  icon === "Leaf" ? "🍃" :
+  icon === "Trees" ? "🌳" :
+  icon === "Globe" ? "🌍" : "🌿"
 
 const emojiForAch = (icon: string) =>
-  icon === 'Star' ? '⭐' :
-  icon === 'Award' ? '🏅' :
-  icon === 'Shield' ? '🛡️' :
-  icon === 'MessageSquare' ? '💬' :
-  icon === 'Megaphone' ? '📣' : '🏆'
+  icon === "Star" ? "⭐" :
+  icon === "Award" ? "🏅" :
+  icon === "Shield" ? "🛡️" :
+  icon === "MessageSquare" ? "💬" :
+  icon === "Megaphone" ? "📣" : "🏆"
+
+// --- Edit profile state ---
+const isEditing = ref(false)
+const editName = ref("")
+const editBio = ref("")
+const editAvatarUrl = ref("")
+const avatarInputRef = ref<HTMLInputElement | null>(null)
+
+function startEdit() {
+  editName.value = user.value.name
+  editBio.value = user.value.bio
+  editAvatarUrl.value = user.value.avatarUrl
+  isEditing.value = true
+}
+
+function cancelEdit() {
+  isEditing.value = false
+}
+
+function saveEdit() {
+  if (!editName.value.trim()) return
+  auth.updateProfile({
+    name: editName.value.trim(),
+    bio: editBio.value.trim(),
+    avatarUrl: editAvatarUrl.value.trim() || user.value.avatarUrl,
+  })
+  isEditing.value = false
+}
+
+function onAvatarFileChange(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = () => {
+    editAvatarUrl.value = reader.result as string
+  }
+  reader.readAsDataURL(file)
+}
+
+function randomizeAvatar() {
+  const seed = encodeURIComponent(editName.value || user.value.name) + Date.now()
+  editAvatarUrl.value = `https://api.dicebear.com/9.x/avataaars/svg?seed=${seed}&backgroundColor=b6e3f4`
+}
+
+// Update avatar seed on name change in edit mode
+watch(editName, (newName) => {
+  if (!editAvatarUrl.value.startsWith("data:")) {
+    const seed = encodeURIComponent(newName.trim() || "default")
+    editAvatarUrl.value = `https://api.dicebear.com/9.x/avataaars/svg?seed=${seed}&backgroundColor=b6e3f4`
+  }
+})
+
+function logout() {
+  auth.logout()
+  router.push("/login")
+}
 </script>
 
 <template>
@@ -33,14 +94,67 @@ const emojiForAch = (icon: string) =>
     <!-- Profile header -->
     <div class="profile-header eco-card">
       <div class="avatar-wrap">
-        <img :src="currentUser.avatarUrl" :alt="currentUser.name" class="avatar profile-avatar" width="80" height="80" />
+        <img
+          :src="isEditing ? editAvatarUrl : user.avatarUrl"
+          :alt="user.name"
+          class="avatar profile-avatar"
+          width="80"
+          height="80"
+        />
         <div class="level-badge">{{ emojiForLevel(progress.currentLevel.icon) }}</div>
+        <button v-if="isEditing" class="avatar-edit-btn" title="Trocar foto" @click="avatarInputRef?.click()">
+          <Camera :size="14" />
+        </button>
+        <input
+          ref="avatarInputRef"
+          type="file"
+          accept="image/*"
+          style="display:none"
+          @change="onAvatarFileChange"
+        />
       </div>
-      <div class="profile-info">
-        <h2 class="profile-name">{{ currentUser.name }}</h2>
-        <p class="profile-username">{{ currentUser.username }}</p>
-        <p class="profile-bio">{{ currentUser.bio }}</p>
-        <p class="profile-joined">Membro desde {{ formatDate(currentUser.joinedAt) }}</p>
+
+      <!-- View mode -->
+      <div v-if="!isEditing" class="profile-info">
+        <h2 class="profile-name">{{ user.name }}</h2>
+        <p class="profile-username">{{ user.username }}</p>
+        <p class="profile-bio">{{ user.bio }}</p>
+        <p class="profile-joined">Membro desde {{ formatDate(user.joinedAt) }}</p>
+        <div class="profile-actions">
+          <button class="btn-secondary profile-edit-btn" @click="startEdit">
+            <Pencil :size="14" /> Editar perfil
+          </button>
+          <button class="btn-ghost logout-btn" @click="logout">
+            <LogOut :size="14" /> Sair
+          </button>
+        </div>
+      </div>
+
+      <!-- Edit mode -->
+      <div v-else class="profile-info edit-mode">
+        <div class="edit-field">
+          <label class="edit-label" for="edit-name">Nome</label>
+          <input id="edit-name" v-model="editName" class="edit-input" type="text" placeholder="Seu nome" />
+        </div>
+        <div class="edit-field">
+          <label class="edit-label" for="edit-bio">Bio</label>
+          <textarea id="edit-bio" v-model="editBio" class="edit-input edit-textarea" rows="3" placeholder="Fale sobre você..." />
+        </div>
+        <div class="edit-field">
+          <label class="edit-label">Foto</label>
+          <div class="avatar-url-row">
+            <input v-model="editAvatarUrl" class="edit-input edit-input-sm" type="text" placeholder="URL da imagem" />
+            <button class="btn-ghost avatar-rand-btn" title="Gerar avatar aleatório" @click="randomizeAvatar">🎲</button>
+          </div>
+        </div>
+        <div class="edit-actions">
+          <button class="btn-primary edit-save-btn" :disabled="!editName.trim()" @click="saveEdit">
+            <Check :size="15" /> Salvar
+          </button>
+          <button class="btn-secondary" @click="cancelEdit">
+            <X :size="15" /> Cancelar
+          </button>
+        </div>
       </div>
     </div>
 
@@ -126,12 +240,53 @@ const emojiForAch = (icon: string) =>
   width: 28px; height: 28px;
   display: flex; align-items: center; justify-content: center;
 }
+.avatar-edit-btn {
+  position: absolute; top: -4px; right: -4px;
+  width: 26px; height: 26px;
+  background: #16a34a; color: white;
+  border: 2px solid white; border-radius: 9999px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.15s;
+}
+.avatar-edit-btn:hover { background: #15803d; }
 
-.profile-info { flex: 1; }
+.profile-info { flex: 1; min-width: 0; }
 .profile-name { margin: 0 0 0.125rem; font-size: 1.25rem; font-weight: 700; color: #1c1917; }
 .profile-username { margin: 0 0 0.5rem; font-size: 0.875rem; color: #a8a29e; }
 .profile-bio { margin: 0 0 0.5rem; font-size: 0.875rem; color: #57534e; line-height: 1.5; }
-.profile-joined { margin: 0; font-size: 0.75rem; color: #a8a29e; }
+.profile-joined { margin: 0 0 0.75rem; font-size: 0.75rem; color: #a8a29e; }
+
+.profile-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.profile-edit-btn { font-size: 0.8125rem; padding: 0.375rem 0.875rem; }
+.logout-btn { font-size: 0.8125rem; padding: 0.375rem 0.875rem; color: #dc2626; }
+.logout-btn:hover { background: #fef2f2; color: #dc2626; }
+
+/* Edit mode */
+.edit-mode { display: flex; flex-direction: column; gap: 0.625rem; }
+.edit-field { display: flex; flex-direction: column; gap: 0.25rem; }
+.edit-label { font-size: 0.75rem; font-weight: 600; color: #78716c; text-transform: uppercase; letter-spacing: 0.04em; }
+.edit-input {
+  padding: 0.5rem 0.75rem;
+  border: 1.5px solid #e7e5e4;
+  border-radius: 0.625rem;
+  font-size: 0.875rem;
+  color: #1c1917;
+  background: #fafaf9;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+}
+.edit-input:focus { border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,.1); background: white; }
+.edit-textarea { resize: vertical; min-height: 70px; }
+.edit-input-sm { flex: 1; }
+
+.avatar-url-row { display: flex; gap: 0.375rem; align-items: center; }
+.avatar-rand-btn { padding: 0.5rem; font-size: 1.125rem; line-height: 1; border-radius: 0.625rem; }
+
+.edit-actions { display: flex; gap: 0.5rem; margin-top: 0.25rem; }
+.edit-save-btn { font-size: 0.875rem; padding: 0.5rem 1rem; border-radius: 0.625rem; }
 
 .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.625rem; }
 .stat-card { padding: 0.875rem 0.5rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; }

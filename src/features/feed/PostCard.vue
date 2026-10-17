@@ -3,15 +3,35 @@ import { ref, computed } from 'vue'
 import type { Post } from '@/types'
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '@/types'
 import { useFeedStore } from '@/stores/useFeedStore'
+import { useAuthStore } from '@/stores/useAuthStore'
 import { timeAgo } from '@/utils/date'
 import { Heart, MessageCircle, Share2, ChevronDown, ChevronUp, Send } from '@lucide/vue'
 
 const props = defineProps<{ post: Post }>()
 const feed = useFeedStore()
+const auth = useAuthStore()
 
 const showComments = ref(false)
 const commentText = ref('')
 const isSubmitting = ref(false)
+
+const isAuthorMe = computed(() => !!auth.user && props.post.authorId === auth.user.id)
+const authorName = computed(() => (isAuthorMe.value ? auth.user!.name : props.post.authorName))
+const authorAvatarUrl = computed(() => (isAuthorMe.value ? auth.user!.avatarUrl : props.post.authorAvatarUrl))
+
+function getCommentAuthorName(comment: { authorId: string; authorName: string }) {
+  if (auth.user && comment.authorId === auth.user.id) {
+    return auth.user.name
+  }
+  return comment.authorName
+}
+
+function getCommentAvatarUrl(comment: { authorId: string; authorAvatarUrl: string }) {
+  if (auth.user && comment.authorId === auth.user.id) {
+    return auth.user.avatarUrl
+  }
+  return comment.authorAvatarUrl
+}
 
 const categoryColor = computed(() => CATEGORY_COLORS[props.post.category])
 const categoryLabel = computed(() => CATEGORY_LABELS[props.post.category])
@@ -35,7 +55,7 @@ async function submitComment() {
 
 async function share() {
   const url = window.location.href
-  const text = `${props.post.authorName}: ${props.post.text}`
+  const text = `${authorName.value}: ${props.post.text}`
   if (navigator.share) {
     try {
       await navigator.share({ title: 'EcoSocial', text, url })
@@ -51,9 +71,9 @@ async function share() {
   <article class="eco-card post-card">
     <!-- Header -->
     <div class="post-header">
-      <img :src="post.authorAvatarUrl" :alt="post.authorName" class="avatar" width="40" height="40" />
+      <img :src="authorAvatarUrl" :alt="authorName" class="avatar" width="40" height="40" />
       <div class="post-meta">
-        <span class="author-name">{{ post.authorName }}</span>
+        <span class="author-name">{{ authorName }}</span>
         <span class="post-time">{{ timeAgo(post.createdAt) }}</span>
       </div>
       <span class="category-badge" :style="{ background: categoryColor + '18', color: categoryColor }">
@@ -95,9 +115,9 @@ async function share() {
       <div v-if="showComments" class="comments-section">
         <div v-if="post.comments.length" class="comments-list">
           <div v-for="comment in post.comments" :key="comment.id" class="comment">
-            <img :src="comment.authorAvatarUrl" :alt="comment.authorName" class="avatar" width="28" height="28" />
+            <img :src="getCommentAvatarUrl(comment)" :alt="getCommentAuthorName(comment)" class="avatar" width="28" height="28" />
             <div class="comment-bubble">
-              <span class="comment-author">{{ comment.authorName }}</span>
+              <span class="comment-author">{{ getCommentAuthorName(comment) }}</span>
               <p class="comment-text">{{ comment.text }}</p>
             </div>
           </div>

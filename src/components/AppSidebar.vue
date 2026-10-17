@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useProgressStore } from '@/stores/useProgressStore'
+import { useAuthStore } from '@/stores/useAuthStore'
 import { Home, Compass, Trophy, User, Leaf } from '@lucide/vue'
 
 const route = useRoute()
+const router = useRouter()
 const store = useProgressStore()
+const auth = useAuthStore()
 
 const navItems = [
   { to: '/', name: 'home', label: 'Feed', icon: Home },
@@ -12,6 +15,11 @@ const navItems = [
   { to: '/pontos', name: 'points', label: 'Pontos', icon: Trophy },
   { to: '/perfil', name: 'profile', label: 'Perfil', icon: User },
 ]
+
+function logout() {
+  auth.logout()
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -40,6 +48,22 @@ const navItems = [
       <div class="progress-bar" style="margin-top:8px">
         <div class="progress-bar-fill" :style="{ width: store.levelProgress + '%' }" />
       </div>
+    </div>
+
+    <!-- User info + logout -->
+    <div v-if="auth.user" class="sidebar-user">
+      <img :src="auth.user.avatarUrl" :alt="auth.user.name" class="avatar sidebar-avatar" width="36" height="36" />
+      <div class="sidebar-user-info">
+        <span class="sidebar-user-name">{{ auth.user.name }}</span>
+        <span class="sidebar-user-username">{{ auth.user.username }}</span>
+      </div>
+      <button class="sidebar-logout" title="Sair" @click="logout">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+      </button>
     </div>
   </aside>
 </template>
@@ -116,6 +140,7 @@ const navItems = [
   border-radius: 0.75rem;
   padding: 1rem;
   border: 1px solid #bbf7d0;
+  margin-bottom: 0.75rem;
 }
 
 .points-label {
@@ -132,4 +157,62 @@ const navItems = [
   color: #1c1917;
   margin-top: 0.25rem;
 }
+
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e7e5e4;
+  background: #fafaf9;
+}
+
+.sidebar-avatar {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+}
+
+.sidebar-user-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-user-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1c1917;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-user-username {
+  font-size: 0.75rem;
+  color: #a8a29e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-logout {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #a8a29e;
+  padding: 0.25rem;
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s, background 0.15s;
+}
+.sidebar-logout:hover {
+  color: #dc2626;
+  background: #fef2f2;
+}
 </style>
+

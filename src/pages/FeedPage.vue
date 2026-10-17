@@ -3,12 +3,13 @@ import { ref } from 'vue'
 import type { PostCategory } from '@/types'
 import { CATEGORY_LABELS } from '@/types'
 import { useFeedStore } from '@/stores/useFeedStore'
+import { useAuthStore } from '@/stores/useAuthStore'
 import PostCard from '@/features/feed/PostCard.vue'
 import CreatePostModal from '@/features/feed/CreatePostModal.vue'
-import { currentUser } from '@/mocks/user'
 import { Plus, SlidersHorizontal } from '@lucide/vue'
 
 const feed = useFeedStore()
+const auth = useAuthStore()
 const showModal = ref(false)
 
 const categories = [
@@ -25,7 +26,7 @@ function setFilter(cat: string) {
   <div class="feed-page">
     <!-- Create post prompt -->
     <div class="create-prompt eco-card" @click="showModal = true" role="button" id="open-create-post">
-      <img :src="currentUser.avatarUrl" :alt="currentUser.name" class="avatar" width="36" height="36" />
+      <img :src="auth.user?.avatarUrl" :alt="auth.user?.name" class="avatar" width="36" height="36" />
       <div class="prompt-placeholder">O que voce quer compartilhar hoje?</div>
       <button class="btn-primary" style="flex-shrink:0" @click.stop="showModal = true" id="btn-new-post">
         <Plus :size="16" /> Publicar
