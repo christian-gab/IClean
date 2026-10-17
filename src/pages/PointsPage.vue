@@ -1,19 +1,28 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useProgressStore } from '@/stores/useProgressStore'
-import { allAchievements } from '@/mocks/achievements'
-import { levels } from '@/mocks/levels'
+import { allAchievements as fallbackAchievements } from '@/mocks/achievements'
+import { levels as fallbackLevels } from '@/mocks/levels'
 import { formatDate } from '@/utils/date'
 import { Trophy, Star, Lock } from '@lucide/vue'
 
 const store = useProgressStore()
 
-const achievementsWithStatus = computed(() =>
-  allAchievements.map(a => ({
-    ...a,
-    unlocked: store.progress.unlockedAchievements.includes(a.id),
-  }))
+const displayLevels = computed(() =>
+  store.levels.length > 0 ? store.levels : fallbackLevels
 )
+
+const achievementsWithStatus = computed(() => {
+  const source = store.achievements.length > 0 ? store.achievements : fallbackAchievements
+  return source.map(a => ({
+    ...a,
+    unlocked: store.progress.unlockedAchievements.includes(a.id) || Boolean('unlocked' in a && (a as { unlocked?: boolean }).unlocked),
+  }))
+})
+
+onMounted(() => {
+  store.loadAllGamificationData()
+})
 
 const emojiForLevel = (icon: string) =>
   icon === 'Sprout' ? '🌱' :
@@ -80,7 +89,7 @@ const emojiForAch = (icon: string) =>
       <h2 class="section-title">Niveis</h2>
       <div class="levels-list">
         <div
-          v-for="level in levels"
+          v-for="level in displayLevels"
           :key="level.name"
           class="level-item"
           :class="{ current: level.name === store.currentLevel.name }"

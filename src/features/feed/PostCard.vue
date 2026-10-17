@@ -47,10 +47,15 @@ function toggleComments() {
 async function submitComment() {
   if (!commentText.value.trim()) return
   isSubmitting.value = true
-  feed.addComment(props.post.id, commentText.value.trim())
-  commentText.value = ''
-  isSubmitting.value = false
-  showComments.value = true
+  try {
+    await feed.addComment(props.post.id, commentText.value.trim())
+    commentText.value = ''
+    showComments.value = true
+  } catch (err) {
+    console.error('Erro ao comentar:', err)
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
 async function share() {

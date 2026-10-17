@@ -31,16 +31,25 @@ function closeModal() {
 async function submitPost() {
   if (!canSubmit.value) return
   isPosting.value = true
-  await new Promise(r => setTimeout(r, 300)) // simulated delay
-  feed.createPost({
-    text: text.value.trim(),
-    category: category.value,
-    imageUrl: imageUrl.value.trim() || undefined,
-  })
-  progress.recordPost()
-  progress.addToast({ message: 'Publicacao criada com sucesso!', type: 'success' })
-  isPosting.value = false
-  closeModal()
+  try {
+    const result = await feed.createPost({
+      text: text.value.trim(),
+      category: category.value,
+      imageUrl: imageUrl.value.trim() || undefined,
+    })
+    await progress.fetchProgress()
+    progress.addToast({ message: 'Publicação criada com sucesso!', type: 'success' })
+
+    if (result.unlockedAchievements?.length) {
+      await progress.fetchAchievements()
+    }
+    closeModal()
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Falha ao publicar'
+    progress.addToast({ message: msg, type: 'default' })
+  } finally {
+    isPosting.value = false
+  }
 }
 </script>
 

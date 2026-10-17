@@ -8,13 +8,13 @@ export const levels: Level[] = [
 ]
 
 export function getLevelForPoints(points: number): Level {
-  return levels.slice().reverse().find(l => points >= l.minPoints) ?? levels[0]
+  return levels.slice().reverse().find(l => points >= l.minPoints) ?? levels[0]!
 }
 
 export function getNextLevel(points: number): Level | null {
   const current = getLevelForPoints(points)
   const idx = levels.indexOf(current)
-  return idx < levels.length - 1 ? levels[idx + 1] : null
+  return idx < levels.length - 1 ? (levels[idx + 1] ?? null) : null
 }
 
 export function getLevelProgress(points: number): number {

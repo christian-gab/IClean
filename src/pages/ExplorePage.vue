@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import type { PostCategory, SustainableAction } from '@/types'
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '@/types'
 import { useProgressStore } from '@/stores/useProgressStore'
-import { sustainableActions } from '@/mocks/actions'
-import { Check, Star, ShieldCheck } from '@lucide/vue'
+import { useActionStore } from '@/stores/useActionStore'
+import { Check, Star, ShieldCheck, Loader } from '@lucide/vue'
 import ActionProofModal from '@/features/actions/ActionProofModal.vue'
 
-const store = useProgressStore()
+const progressStore = useProgressStore()
+const actionStore = useActionStore()
 const activeFilter = ref<PostCategory | 'all'>('all')
 
 // Modal state
@@ -23,12 +24,12 @@ const categories = [
 
 const filteredActions = computed(() =>
   activeFilter.value === 'all'
-    ? sustainableActions
-    : sustainableActions.filter(a => a.category === activeFilter.value)
+    ? actionStore.actions
+    : actionStore.actions.filter(a => a.category === activeFilter.value)
 )
 
 function isCompleted(actionId: string) {
-  return store.progress.sessionCompletedActions.includes(actionId)
+  return progressStore.progress.sessionCompletedActions.includes(actionId)
 }
 
 function getEmoji(icon: string) {
@@ -45,10 +46,24 @@ function openProof(action: SustainableAction) {
   proofModal.value = { action, emoji: getEmoji(action.icon) }
 }
 
-function onApproved(actionId: string, title: string, points: number) {
-  store.completeAction(actionId, title, points)
+async function onApproved(actionId: string, _title: string, _points: number, proof?: { photoUrl?: string; description?: string }) {
+  try {
+    await progressStore.completeAction(actionId, proof)
+  } catch (e) {
+    console.error('Erro ao completar ação:', e)
+  }
   proofModal.value = null
 }
+
+function setFilter(val: PostCategory | 'all') {
+  activeFilter.value = val
+  actionStore.setCategory(val)
+}
+
+onMounted(() => {
+  actionStore.fetchActions()
+  progressStore.fetchProgress()
+})
 </script>
 
 <template>
@@ -70,15 +85,21 @@ function onApproved(actionId: string, title: string, points: number) {
         :key="val"
         class="chip"
         :class="{ active: activeFilter === val }"
-        @click="activeFilter = val"
+        @click="setFilter(val)"
         :id="`explore-filter-${val}`"
       >
         {{ label }}
       </button>
     </div>
 
+    <!-- Loading state -->
+    <div v-if="actionStore.isLoading" class="loading-state">
+      <Loader :size="28" class="spin" color="#16a34a" />
+      <p>Carregando ações sustentáveis...</p>
+    </div>
+
     <!-- Actions grid -->
-    <div class="actions-grid">
+    <div v-else class="actions-grid">
       <div
         v-for="action in filteredActions"
         :key="action.id"
@@ -152,6 +173,15 @@ function onApproved(actionId: string, title: string, points: number) {
 
 .chip:hover { border-color: #86efac; color: #16a34a; }
 .chip.active { background: #dcfce7; border-color: #86efac; color: #15803d; font-weight: 600; }
+
+.loading-state {
+  text-align: center; padding: 3rem 1rem;
+  color: #78716c; font-size: 0.9375rem;
+  display: flex; flex-direction: column; align-items: center; gap: 0.75rem;
+}
+
+.spin { animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .actions-grid {
   display: grid;

@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { ref, computed } from "vue"
 import { X, Camera, Upload, CheckCircle, XCircle, Loader, Star } from "@lucide/vue"
 
@@ -11,7 +11,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: []
-  approved: [actionId: string, title: string, points: number]
+  approved: [actionId: string, title: string, points: number, proof?: { photoUrl?: string; description?: string }]
 }>()
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -71,7 +71,10 @@ async function submitForValidation() {
 }
 
 function collectPoints() {
-  emit("approved", props.actionId, props.actionTitle, props.actionPoints)
+  emit("approved", props.actionId, props.actionTitle, props.actionPoints, {
+    photoUrl: imagePreview.value || undefined,
+    description: description.value || undefined,
+  })
 }
 
 function retry() {

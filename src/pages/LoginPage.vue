@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { ref } from "vue"
 import { useRouter } from "vue-router"
 import { useAuthStore } from "@/stores/useAuthStore"
@@ -23,9 +23,14 @@ async function handleLogin() {
     return
   }
   isLoading.value = true
-  await new Promise(r => setTimeout(r, 600))
-  auth.login(name.value, username.value)
-  router.push("/")
+  try {
+    await auth.login(name.value, username.value)
+    router.push("/")
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : "Falha ao conectar ao servidor. Verifique se o backend está rodando."
+  } finally {
+    isLoading.value = false
+  }
 }
 </script>
 

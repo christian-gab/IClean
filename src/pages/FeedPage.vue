@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import type { PostCategory } from '@/types'
 import { CATEGORY_LABELS } from '@/types'
 import { useFeedStore } from '@/stores/useFeedStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import PostCard from '@/features/feed/PostCard.vue'
 import CreatePostModal from '@/features/feed/CreatePostModal.vue'
-import { Plus, SlidersHorizontal } from '@lucide/vue'
+import { Plus, SlidersHorizontal, Loader } from '@lucide/vue'
 
 const feed = useFeedStore()
 const auth = useAuthStore()
@@ -20,6 +20,10 @@ const categories = [
 function setFilter(cat: string) {
   feed.setCategory(cat === 'all' ? null : cat as PostCategory)
 }
+
+onMounted(() => {
+  feed.fetchPosts()
+})
 </script>
 
 <template>
@@ -50,8 +54,14 @@ function setFilter(cat: string) {
       </div>
     </div>
 
+    <!-- Loading state -->
+    <div v-if="feed.isLoading" class="loading-state">
+      <Loader :size="28" class="spin" color="#16a34a" />
+      <p>Carregando publicações...</p>
+    </div>
+
     <!-- Posts -->
-    <div v-if="feed.filteredPosts.length" class="posts-list">
+    <div v-else-if="feed.filteredPosts.length" class="posts-list">
       <TransitionGroup name="slide-up">
         <PostCard v-for="post in feed.filteredPosts" :key="post.id" :post="post" />
       </TransitionGroup>
@@ -103,11 +113,14 @@ function setFilter(cat: string) {
 
 .posts-list { display: flex; flex-direction: column; }
 
-.empty-state {
+.empty-state, .loading-state {
   text-align: center; padding: 3rem 1rem;
   color: #78716c; font-size: 0.9375rem;
-  display: flex; flex-direction: column; align-items: center; gap: 1rem;
+  display: flex; flex-direction: column; align-items: center; gap: 0.75rem;
 }
+
+.spin { animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .empty-icon { font-size: 3rem; }
 </style>

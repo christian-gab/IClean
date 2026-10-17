@@ -1,138 +1,107 @@
 import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import type { Post, Comment, CreatePostPayload, PostCategory } from '@/types'
-import { storage } from '@/utils/storage'
-import { nowISO, generateId } from '@/utils/date'
-import { initialPosts } from '@/mocks/posts'
-import { useAuthStore } from '@/stores/useAuthStore'
-
-const STORAGE_KEY = 'posts'
+import { postService } from '@/services'
 
 export const useFeedStore = defineStore('feed', () => {
-  const posts = ref<Post[]>(storage.get(STORAGE_KEY, initialPosts))
+  const posts = ref<Post[]>([])
   const activeCategory = ref<PostCategory | null>(null)
+  const isLoading = ref<boolean>(false)
+  const isSubmitting = ref<boolean>(false)
+  const error = ref<string | null>(null)
 
   const filteredPosts = computed(() => {
     if (!activeCategory.value) return posts.value
     return posts.value.filter((p) => p.category === activeCategory.value)
   })
 
-  function save() {
-    storage.set(STORAGE_KEY, posts.value)
-  }
-
-  function getUser() {
-    const auth = useAuthStore()
-    return (
-      auth.user ?? {
-        id: 'user-1',
-        name: 'Usuário',
-        username: '@usuario',
-        avatarUrl: 'https://api.dicebear.com/9.x/avataaars/svg?seed=default&backgroundColor=b6e3f4',
+  async function fetchPosts(cat?: PostCategory | null) {
+    isLoading.value = true
+    error.value = null
+    try {
+      if (cat !== undefined) {
+        activeCategory.value = cat
       }
-    )
-  }
-
-  function createPost(payload: CreatePostPayload): Post {
-    const u = getUser()
-    const post: Post = {
-      id: generateId(),
-      authorId: u.id,
-      authorName: u.name,
-      authorAvatarUrl: u.avatarUrl,
-      text: payload.text,
-      imageUrl: payload.imageUrl,
-      category: payload.category,
-      likes: 0,
-      likedByMe: false,
-      comments: [],
-      createdAt: nowISO(),
+      const data = await postService.getPosts(activeCategory.value)
+      posts.value = data
+      return data
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Falha ao buscar publicações'
+      error.value = msg
+      console.error('Erro ao buscar posts:', err)
+      return []
+    } finally {
+      isLoading.value = false
     }
-    posts.value.unshift(post)
-    save()
-    return post
   }
 
-  function toggleLike(postId: string) {
+  async function createPost(payload: CreatePostPayload): Promise<{ post: Post; unlockedAchievements: string[] }> {
+    isSubmitting.value = true
+    error.value = null
+    try {
+      const result = await postService.createPost(payload)
+      posts.value.unshift(result.post)
+      return result
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Falha ao criar publicação'
+      error.value = msg
+      throw err
+    } finally {
+      isSubmitting.value = false
+    }
+  }
+
+  async function toggleLike(postId: string) {
     const post = posts.value.find((p) => p.id === postId)
     if (!post) return
-    if (post.likedByMe) {
-      post.likes -= 1
-      post.likedByMe = false
-    } else {
-      post.likes += 1
-      post.likedByMe = true
+
+    // Atualização otimista na interface
+    const wasLiked = post.likedByMe
+    post.likedByMe = !wasLiked
+    post.likes += wasLiked ? -1 : 1
+
+    try {
+      const res = await postService.toggleLike(postId)
+      post.likes = res.likes
+      post.likedByMe = res.likedByMe
+    } catch (err) {
+      // Reverte em caso de erro na rede
+      post.likedByMe = wasLiked
+      post.likes += wasLiked ? 1 : -1
+      console.error('Erro ao curtir post:', err)
     }
-    save()
   }
 
-  function addComment(postId: string, text: string): Comment | null {
+  async function addComment(postId: string, text: string): Promise<Comment | null> {
     const post = posts.value.find((p) => p.id === postId)
     if (!post) return null
-    const u = getUser()
-    const comment: Comment = {
-      id: generateId(),
-      authorId: u.id,
-      authorName: u.name,
-      authorAvatarUrl: u.avatarUrl,
-      text,
-      createdAt: nowISO(),
+
+    try {
+      const comment = await postService.addComment(postId, text)
+      post.comments.push(comment)
+      return comment
+    } catch (err) {
+      console.error('Erro ao adicionar comentário:', err)
+      throw err
     }
-    post.comments.push(comment)
-    save()
-    return comment
   }
 
   function setCategory(cat: PostCategory | null) {
     activeCategory.value = cat
-  }
-
-  function syncAuthorData(userId: string, name: string, avatarUrl: string) {
-    let changed = false
-    for (const post of posts.value) {
-      if (post.authorId === userId) {
-        post.authorName = name
-        post.authorAvatarUrl = avatarUrl
-        changed = true
-      }
-      for (const comment of post.comments) {
-        if (comment.authorId === userId) {
-          comment.authorName = name
-          comment.authorAvatarUrl = avatarUrl
-          changed = true
-        }
-      }
-    }
-    if (changed) {
-      save()
-    }
-  }
-
-  const auth = useAuthStore()
-  watch(
-    () => auth.user,
-    (u) => {
-      if (u) {
-        syncAuthorData(u.id, u.name, u.avatarUrl)
-      }
-    },
-    { deep: true, immediate: true }
-  )
-
-  function resetPosts() {
-    posts.value = JSON.parse(JSON.stringify(initialPosts))
-    storage.remove(STORAGE_KEY)
+    return fetchPosts(cat)
   }
 
   return {
     posts,
     filteredPosts,
     activeCategory,
+    isLoading,
+    isSubmitting,
+    error,
+    fetchPosts,
     createPost,
     toggleLike,
     addComment,
     setCategory,
-    resetPosts,
-    syncAuthorData,
   }
 })

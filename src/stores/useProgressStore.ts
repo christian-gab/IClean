@@ -1,12 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { UserProgress, Achievement, Toast } from '@/types'
-import { storage } from '@/utils/storage'
-import { nowISO, generateId } from '@/utils/date'
-import { allAchievements } from '@/mocks/achievements'
-import { getLevelForPoints, getNextLevel, getLevelProgress } from '@/mocks/levels'
-
-const STORAGE_KEY = 'user-progress'
+import type { UserProgress, Level, Achievement, Toast } from '@/types'
+import { progressService, actionService } from '@/services'
+import { generateId } from '@/utils/date'
 
 const defaultProgress = (): UserProgress => ({
   totalPoints: 0,
@@ -18,112 +14,189 @@ const defaultProgress = (): UserProgress => ({
 })
 
 export const useProgressStore = defineStore('progress', () => {
-  const progress = ref<UserProgress>(storage.get(STORAGE_KEY, defaultProgress()))
+  const progress = ref<UserProgress>(defaultProgress())
+  const levels = ref<Level[]>([])
+  const achievements = ref<(Achievement & { unlocked?: boolean })[]>([])
   const toasts = ref<Toast[]>([])
+  const isLoading = ref<boolean>(false)
+  const error = ref<string | null>(null)
 
   // ── Computed ──────────────────────────────────────────────────────────────
-  const currentLevel = computed(() => getLevelForPoints(progress.value.totalPoints))
-  const nextLevel = computed(() => getNextLevel(progress.value.totalPoints))
-  const levelProgress = computed(() => getLevelProgress(progress.value.totalPoints))
+  const currentLevel = computed<Level>(() => {
+    if (levels.value.length === 0) {
+      return { name: 'Semente', minPoints: 0, maxPoints: 99, icon: 'Sprout', color: '#a8a29e' }
+    }
+    const pts = progress.value.totalPoints
+    return levels.value.slice().reverse().find((l) => pts >= l.minPoints) ?? levels.value[0]!
+  })
 
-  const unlockedAchievements = computed((): Achievement[] =>
-    allAchievements.filter(a => progress.value.unlockedAchievements.includes(a.id))
-  )
+  const nextLevel = computed<Level | null>(() => {
+    if (levels.value.length === 0) return null
+    const current = currentLevel.value
+    const idx = levels.value.findIndex((l) => l.name === current.name)
+    return idx >= 0 && idx < levels.value.length - 1 ? (levels.value[idx + 1] ?? null) : null
+  })
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
-  function save() {
-    storage.set(STORAGE_KEY, progress.value)
-  }
+  const levelProgress = computed<number>(() => {
+    const next = nextLevel.value
+    const current = currentLevel.value
+    if (!next) return 100
+    const range = next.minPoints - current.minPoints
+    const earned = progress.value.totalPoints - current.minPoints
+    return Math.min(100, Math.max(0, Math.round((earned / range) * 100)))
+  })
 
+  const unlockedAchievements = computed(() => {
+    return achievements.value.filter((a) => progress.value.unlockedAchievements.includes(a.id) || a.unlocked)
+  })
+
+  // ── Toast Helper ──────────────────────────────────────────────────────────
   function addToast(toast: Omit<Toast, 'id'>) {
     const id = generateId()
     toasts.value.push({ ...toast, id })
     setTimeout(() => {
-      toasts.value = toasts.value.filter(t => t.id !== id)
+      toasts.value = toasts.value.filter((t) => t.id !== id)
     }, 3500)
   }
 
-  function checkAchievements() {
-    const p = progress.value
-    const toUnlock: string[] = []
+  // ── Actions ───────────────────────────────────────────────────────────────
+  async function fetchProgress() {
+    isLoading.value = true
+    try {
+      const data = await progressService.getProgress()
+      progress.value = {
+        totalPoints: data.totalPoints,
+        actionsCompleted: data.actionsCompleted,
+        postsCreated: data.postsCreated,
+        unlockedAchievements: data.unlockedAchievements || [],
+        history: data.history || [],
+        sessionCompletedActions: data.sessionCompletedActions || [],
+      }
+      return progress.value
+    } catch (err) {
+      console.warn('Erro ao buscar progresso do usuário:', err)
+      return progress.value
+    } finally {
+      isLoading.value = false
+    }
+  }
 
-    if (p.actionsCompleted >= 1) toUnlock.push('ach-first-action')
-    if (p.actionsCompleted >= 5) toUnlock.push('ach-5-actions')
-    if (p.actionsCompleted >= 10) toUnlock.push('ach-10-actions')
-    if (p.postsCreated >= 1) toUnlock.push('ach-first-post')
-    if (p.postsCreated >= 5) toUnlock.push('ach-5-posts')
+  async function fetchLevels() {
+    try {
+      const data = await progressService.getLevels()
+      levels.value = data
+      return data
+    } catch (err) {
+      console.warn('Erro ao buscar níveis:', err)
+      return []
+    }
+  }
 
-    for (const id of toUnlock) {
-      if (!p.unlockedAchievements.includes(id)) {
-        p.unlockedAchievements.push(id)
-        const ach = allAchievements.find(a => a.id === id)
-        if (ach) {
-          addToast({
-            message: `Conquista desbloqueada: ${ach.title}`,
-            type: 'achievement',
-            icon: ach.icon,
-          })
+  async function fetchAchievements() {
+    try {
+      const data = await progressService.getAchievements()
+      achievements.value = data
+      return data
+    } catch (err) {
+      console.warn('Erro ao buscar conquistas:', err)
+      return []
+    }
+  }
+
+  async function loadAllGamificationData() {
+    return Promise.allSettled([fetchProgress(), fetchLevels(), fetchAchievements()])
+  }
+
+  async function completeAction(actionId: string, proof?: { photoUrl?: string; description?: string }) {
+    isLoading.value = true
+    try {
+      const result = await actionService.completeAction(actionId, proof)
+
+      // Atualiza progresso reativo
+      progress.value = {
+        totalPoints: result.progress.totalPoints,
+        actionsCompleted: result.progress.actionsCompleted,
+        postsCreated: result.progress.postsCreated,
+        unlockedAchievements: result.progress.unlockedAchievements || [],
+        history: result.progress.history || [],
+        sessionCompletedActions: result.progress.sessionCompletedActions || [],
+      }
+
+      // Notificações
+      if (result.levelUp) {
+        addToast({
+          message: `Nível alcançado: ${result.currentLevelName}! 🎉`,
+          type: 'levelup',
+          icon: currentLevel.value.icon,
+        })
+      } else {
+        addToast({
+          message: `+${result.pointsEarned} pontos conquistados!`,
+          type: 'success',
+        })
+      }
+
+      if (result.unlockedAchievements?.length) {
+        for (const achId of result.unlockedAchievements) {
+          const ach = achievements.value.find((a) => a.id === achId)
+          if (ach) {
+            addToast({
+              message: `Conquista desbloqueada: ${ach.title}`,
+              type: 'achievement',
+              icon: ach.icon,
+            })
+          }
         }
       }
+
+      await fetchAchievements()
+      return true
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao validar ação'
+      addToast({ message: msg, type: 'default' })
+      throw err
+    } finally {
+      isLoading.value = false
     }
   }
 
-  // ── Actions ───────────────────────────────────────────────────────────────
-  function completeAction(actionId: string, actionTitle: string, points: number): boolean {
-    /**
-     * NOTE: This deduplication is SESSION-ONLY and purely demonstrative.
-     * In production, the backend must enforce action frequency rules.
-     */
-    if (progress.value.sessionCompletedActions.includes(actionId)) {
-      addToast({ message: 'Acao ja registrada nesta sessao.', type: 'default' })
-      return false
+  async function resetProgress() {
+    isLoading.value = true
+    try {
+      const data = await progressService.resetProgress()
+      progress.value = {
+        totalPoints: data.totalPoints,
+        actionsCompleted: data.actionsCompleted,
+        postsCreated: data.postsCreated,
+        unlockedAchievements: data.unlockedAchievements || [],
+        history: data.history || [],
+        sessionCompletedActions: data.sessionCompletedActions || [],
+      }
+      await fetchAchievements()
+      addToast({ message: 'Progresso reiniciado com sucesso.', type: 'default' })
+    } catch (err) {
+      console.error('Erro ao reiniciar progresso:', err)
+    } finally {
+      isLoading.value = false
     }
-
-    const prevLevel = getLevelForPoints(progress.value.totalPoints)
-    progress.value.totalPoints += points
-    progress.value.actionsCompleted += 1
-    progress.value.sessionCompletedActions.push(actionId)
-    progress.value.history.unshift({
-      id: generateId(),
-      actionId,
-      actionTitle,
-      points,
-      completedAt: nowISO(),
-    })
-
-    const newLevel = getLevelForPoints(progress.value.totalPoints)
-    if (newLevel.name !== prevLevel.name) {
-      addToast({ message: `Nivel alcancado: ${newLevel.name}!`, type: 'levelup', icon: newLevel.icon })
-    } else {
-      addToast({ message: `+${points} pontos — ${actionTitle}`, type: 'success' })
-    }
-
-    checkAchievements()
-    save()
-    return true
-  }
-
-  function recordPost() {
-    progress.value.postsCreated += 1
-    checkAchievements()
-    save()
-  }
-
-  function resetProgress() {
-    progress.value = defaultProgress()
-    storage.remove(STORAGE_KEY)
-    addToast({ message: 'Progresso reiniciado com sucesso.', type: 'default' })
   }
 
   return {
     progress,
+    levels,
+    achievements,
     toasts,
     currentLevel,
     nextLevel,
     levelProgress,
     unlockedAchievements,
+    isLoading,
+    error,
+    fetchProgress,
+    fetchLevels,
+    fetchAchievements,
+    loadAllGamificationData,
     completeAction,
-    recordPost,
     resetProgress,
     addToast,
   }

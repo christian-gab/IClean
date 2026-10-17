@@ -1,5 +1,5 @@
-﻿<script setup lang="ts">
-import { computed, ref, watch } from "vue"
+<script setup lang="ts">
+import { computed, ref, watch, onMounted } from "vue"
 import { useFeedStore } from "@/stores/useFeedStore"
 import { useProgressStore } from "@/stores/useProgressStore"
 import { useAuthStore } from "@/stores/useAuthStore"
@@ -16,7 +16,7 @@ const router = useRouter()
 const user = computed(() => auth.user!)
 
 const userPosts = computed(() =>
-  feed.posts.filter(p => p.authorId === user.value.id)
+  feed.posts.filter(p => p.authorId === user.value?.id)
 )
 
 const emojiForLevel = (icon: string) =>
@@ -50,15 +50,26 @@ function cancelEdit() {
   isEditing.value = false
 }
 
-function saveEdit() {
+async function saveEdit() {
   if (!editName.value.trim()) return
-  auth.updateProfile({
-    name: editName.value.trim(),
-    bio: editBio.value.trim(),
-    avatarUrl: editAvatarUrl.value.trim() || user.value.avatarUrl,
-  })
-  isEditing.value = false
+  try {
+    await auth.updateProfile({
+      name: editName.value.trim(),
+      bio: editBio.value.trim(),
+      avatarUrl: editAvatarUrl.value.trim() || user.value.avatarUrl,
+    })
+    await feed.fetchPosts()
+    isEditing.value = false
+  } catch (err) {
+    console.error('Erro ao atualizar perfil:', err)
+  }
 }
+
+onMounted(() => {
+  auth.fetchMe()
+  progress.loadAllGamificationData()
+  feed.fetchPosts()
+})
 
 function onAvatarFileChange(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]

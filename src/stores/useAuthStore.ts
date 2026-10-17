@@ -2,61 +2,102 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User } from '@/types'
 import { storage } from '@/utils/storage'
-import { nowISO } from '@/utils/date'
+import { authService } from '@/services'
 
 const STORAGE_KEY = 'auth'
 
 interface AuthState {
   user: User | null
+  token: string | null
   isLoggedIn: boolean
 }
 
 export const useAuthStore = defineStore('auth', () => {
-  const stored = storage.get<AuthState>(STORAGE_KEY, { user: null, isLoggedIn: false })
+  const stored = storage.get<AuthState>(STORAGE_KEY, { user: null, token: null, isLoggedIn: false })
 
   const user = ref<User | null>(stored.user)
+  const token = ref<string | null>(stored.token)
   const isLoggedIn = ref<boolean>(stored.isLoggedIn)
+  const isLoading = ref<boolean>(false)
+  const error = ref<string | null>(null)
 
   const isAuthenticated = computed(() => isLoggedIn.value && user.value !== null)
 
   function save() {
-    storage.set(STORAGE_KEY, { user: user.value, isLoggedIn: isLoggedIn.value })
+    storage.set(STORAGE_KEY, {
+      user: user.value,
+      token: token.value,
+      isLoggedIn: isLoggedIn.value,
+    })
   }
 
-  function login(name: string, username: string) {
-    const avatarSeed = encodeURIComponent(name.trim())
-    user.value = {
-      id: 'user-1',
-      name: name.trim(),
-      username: username.trim().startsWith('@') ? username.trim() : `@${username.trim()}`,
-      bio: 'Apaixonado(a) por natureza e sustentabilidade. Acredito que pequenas acoes fazem grande diferenca.',
-      avatarUrl: `https://api.dicebear.com/9.x/avataaars/svg?seed=${avatarSeed}&backgroundColor=b6e3f4`,
-      joinedAt: nowISO(),
+  async function login(name: string, username: string): Promise<User> {
+    isLoading.value = true
+    error.value = null
+    try {
+      const data = await authService.login(name, username)
+      user.value = data.user
+      token.value = data.token
+      isLoggedIn.value = true
+      save()
+      return data.user
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Falha ao realizar login'
+      error.value = msg
+      throw err
+    } finally {
+      isLoading.value = false
     }
-    isLoggedIn.value = true
-    save()
+  }
+
+  async function fetchMe(): Promise<User | null> {
+    if (!user.value?.id) return null
+    try {
+      const updated = await authService.getMe()
+      user.value = updated
+      save()
+      return updated
+    } catch (err) {
+      console.warn('Erro ao atualizar dados do usuário autenticado:', err)
+      return user.value
+    }
   }
 
   function logout() {
     user.value = null
+    token.value = null
     isLoggedIn.value = false
     storage.clearAll()
   }
 
-  function updateProfile(updates: { name?: string; bio?: string; avatarUrl?: string }) {
-    if (!user.value) return
-    if (updates.name !== undefined) user.value.name = updates.name
-    if (updates.bio !== undefined) user.value.bio = updates.bio
-    if (updates.avatarUrl !== undefined) user.value.avatarUrl = updates.avatarUrl
-    save()
+  async function updateProfile(updates: { name?: string; bio?: string; avatarUrl?: string }): Promise<User | null> {
+    if (!user.value) return null
+    isLoading.value = true
+    error.value = null
+    try {
+      const updated = await authService.updateProfile(user.value.id, updates)
+      user.value = updated
+      save()
+      return updated
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Falha ao atualizar perfil'
+      error.value = msg
+      throw err
+    } finally {
+      isLoading.value = false
+    }
   }
 
   return {
     user,
+    token,
     isLoggedIn,
     isAuthenticated,
+    isLoading,
+    error,
     login,
     logout,
+    fetchMe,
     updateProfile,
   }
 })
