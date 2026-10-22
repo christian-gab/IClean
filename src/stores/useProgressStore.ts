@@ -21,7 +21,6 @@ export const useProgressStore = defineStore('progress', () => {
   const isLoading = ref<boolean>(false)
   const error = ref<string | null>(null)
 
-  // ── Computed ──────────────────────────────────────────────────────────────
   const currentLevel = computed<Level>(() => {
     if (levels.value.length === 0) {
       return { name: 'Semente', minPoints: 0, maxPoints: 99, icon: 'Sprout', color: '#a8a29e' }
@@ -50,7 +49,6 @@ export const useProgressStore = defineStore('progress', () => {
     return achievements.value.filter((a) => progress.value.unlockedAchievements.includes(a.id) || a.unlocked)
   })
 
-  // ── Toast Helper ──────────────────────────────────────────────────────────
   function addToast(toast: Omit<Toast, 'id'>) {
     const id = generateId()
     toasts.value.push({ ...toast, id })
@@ -59,7 +57,6 @@ export const useProgressStore = defineStore('progress', () => {
     }, 3500)
   }
 
-  // ── Actions ───────────────────────────────────────────────────────────────
   async function fetchProgress() {
     isLoading.value = true
     try {
@@ -112,7 +109,6 @@ export const useProgressStore = defineStore('progress', () => {
     try {
       const result = await actionService.completeAction(actionId, proof)
 
-      // Atualiza progresso reativo
       progress.value = {
         totalPoints: result.progress.totalPoints,
         actionsCompleted: result.progress.actionsCompleted,
@@ -122,10 +118,9 @@ export const useProgressStore = defineStore('progress', () => {
         sessionCompletedActions: result.progress.sessionCompletedActions || [],
       }
 
-      // Notificações
       if (result.levelUp) {
         addToast({
-          message: `Nível alcançado: ${result.currentLevelName}! 🎉`,
+          message: `Nível alcançado: ${result.currentLevelName}!`,
           type: 'levelup',
           icon: currentLevel.value.icon,
         })
@@ -160,25 +155,8 @@ export const useProgressStore = defineStore('progress', () => {
     }
   }
 
-  async function resetProgress() {
-    isLoading.value = true
-    try {
-      const data = await progressService.resetProgress()
-      progress.value = {
-        totalPoints: data.totalPoints,
-        actionsCompleted: data.actionsCompleted,
-        postsCreated: data.postsCreated,
-        unlockedAchievements: data.unlockedAchievements || [],
-        history: data.history || [],
-        sessionCompletedActions: data.sessionCompletedActions || [],
-      }
-      await fetchAchievements()
-      addToast({ message: 'Progresso reiniciado com sucesso.', type: 'default' })
-    } catch (err) {
-      console.error('Erro ao reiniciar progresso:', err)
-    } finally {
-      isLoading.value = false
-    }
+  function resetToDefault() {
+    progress.value = defaultProgress()
   }
 
   return {
@@ -197,7 +175,7 @@ export const useProgressStore = defineStore('progress', () => {
     fetchAchievements,
     loadAllGamificationData,
     completeAction,
-    resetProgress,
+    resetToDefault,
     addToast,
   }
 })

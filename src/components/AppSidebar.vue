@@ -2,7 +2,6 @@
 import { useRoute, useRouter } from 'vue-router'
 import { useProgressStore } from '@/stores/useProgressStore'
 import { useAuthStore } from '@/stores/useAuthStore'
-import { Home, Compass, Trophy, User, Leaf } from '@lucide/vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -10,10 +9,10 @@ const store = useProgressStore()
 const auth = useAuthStore()
 
 const navItems = [
-  { to: '/', name: 'home', label: 'Feed', icon: Home },
-  { to: '/explorar', name: 'explore', label: 'Explorar', icon: Compass },
-  { to: '/pontos', name: 'points', label: 'Pontos', icon: Trophy },
-  { to: '/perfil', name: 'profile', label: 'Perfil', icon: User },
+  { to: '/', name: 'home', label: 'Feed', icon: 'fa-house' },
+  { to: '/explorar', name: 'explore', label: 'Explorar', icon: 'fa-compass' },
+  { to: '/pontos', name: 'points', label: 'Pontos', icon: 'fa-trophy' },
+  { to: '/perfil', name: 'profile', label: 'Perfil', icon: 'fa-user' },
 ]
 
 function logout() {
@@ -25,8 +24,8 @@ function logout() {
 <template>
   <aside class="sidebar">
     <div class="sidebar-logo">
-      <Leaf :size="28" color="#16a34a" />
-      <span>EcoSocial</span>
+      <i class="fa-solid fa-leaf sidebar-logo-icon" aria-hidden="true" />
+      <span>Iclean</span>
     </div>
 
     <nav class="sidebar-nav">
@@ -37,7 +36,7 @@ function logout() {
         class="nav-item"
         :class="{ active: route.name === item.name }"
       >
-        <component :is="item.icon" :size="20" />
+        <i class="fa-solid" :class="item.icon" aria-hidden="true" />
         <span>{{ item.label }}</span>
       </RouterLink>
     </nav>
@@ -50,7 +49,6 @@ function logout() {
       </div>
     </div>
 
-    <!-- User info + logout -->
     <div v-if="auth.user" class="sidebar-user">
       <img :src="auth.user.avatarUrl" :alt="auth.user.name" class="avatar sidebar-avatar" width="36" height="36" />
       <div class="sidebar-user-info">
@@ -58,11 +56,7 @@ function logout() {
         <span class="sidebar-user-username">{{ auth.user.username }}</span>
       </div>
       <button class="sidebar-logout" title="Sair" @click="logout">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-          <polyline points="16 17 21 12 16 7"/>
-          <line x1="21" y1="12" x2="9" y2="12"/>
-        </svg>
+        <i class="fa-solid fa-right-from-bracket" aria-hidden="true" />
       </button>
     </div>
   </aside>
@@ -97,6 +91,8 @@ function logout() {
   margin-bottom: 2rem;
 }
 
+.sidebar-logo-icon { font-size: 1.75rem; color: #16a34a; }
+
 .sidebar-logo span {
   font-size: 1.25rem;
   font-weight: 800;
@@ -123,6 +119,8 @@ function logout() {
   font-size: 0.9375rem;
   transition: all 0.15s ease;
 }
+
+.nav-item i { width: 20px; text-align: center; font-size: 1.25rem; }
 
 .nav-item:hover {
   background: #f0fdf4;
@@ -215,4 +213,3 @@ function logout() {
   background: #fef2f2;
 }
 </style>
-

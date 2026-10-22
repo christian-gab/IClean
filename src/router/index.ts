@@ -10,6 +10,12 @@ const router = createRouter({
       meta: { public: true },
     },
     {
+      path: '/cadastro',
+      name: 'register',
+      component: () => import('@/pages/RegisterPage.vue'),
+      meta: { public: true },
+    },
+    {
       path: '/',
       component: () => import('@/components/AppLayout.vue'),
       children: [
@@ -39,11 +45,9 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
-  // Lazy import to avoid circular dependency at module load time
   const { useAuthStore } = await import('@/stores/useAuthStore')
   const { getActivePinia } = await import('pinia')
 
-  // Pinia might not be ready yet during SSR or early guard calls — guard safely
   const pinia = getActivePinia()
   if (!pinia) return true
 
@@ -55,7 +59,7 @@ router.beforeEach(async (to) => {
     return { name: 'login' }
   }
 
-  if (auth.isAuthenticated && to.name === 'login') {
+  if (auth.isAuthenticated && (to.name === 'login' || to.name === 'register')) {
     return { name: 'home' }
   }
 

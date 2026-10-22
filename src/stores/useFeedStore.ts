@@ -55,7 +55,6 @@ export const useFeedStore = defineStore('feed', () => {
     const post = posts.value.find((p) => p.id === postId)
     if (!post) return
 
-    // Atualização otimista na interface
     const wasLiked = post.likedByMe
     post.likedByMe = !wasLiked
     post.likes += wasLiked ? -1 : 1
@@ -65,7 +64,6 @@ export const useFeedStore = defineStore('feed', () => {
       post.likes = res.likes
       post.likedByMe = res.likedByMe
     } catch (err) {
-      // Reverte em caso de erro na rede
       post.likedByMe = wasLiked
       post.likes += wasLiked ? 1 : -1
       console.error('Erro ao curtir post:', err)

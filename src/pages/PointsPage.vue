@@ -4,7 +4,7 @@ import { useProgressStore } from '@/stores/useProgressStore'
 import { allAchievements as fallbackAchievements } from '@/mocks/achievements'
 import { levels as fallbackLevels } from '@/mocks/levels'
 import { formatDate } from '@/utils/date'
-import { Trophy, Star, Lock } from '@lucide/vue'
+import { getFontAwesomeIcon } from '@/utils/icons'
 
 const store = useProgressStore()
 
@@ -24,31 +24,20 @@ onMounted(() => {
   store.loadAllGamificationData()
 })
 
-const emojiForLevel = (icon: string) =>
-  icon === 'Sprout' ? '🌱' :
-  icon === 'Leaf' ? '🍃' :
-  icon === 'Trees' ? '🌳' :
-  icon === 'Globe' ? '🌍' : '🌿'
-
-const emojiForAch = (icon: string) =>
-  icon === 'Star' ? '⭐' :
-  icon === 'Award' ? '🏅' :
-  icon === 'Shield' ? '🛡️' :
-  icon === 'MessageSquare' ? '💬' :
-  icon === 'Megaphone' ? '📣' : '🏆'
 </script>
 
 <template>
   <div class="points-page">
-    <!-- Level card -->
     <div class="level-card eco-card">
       <div class="level-header">
-        <div class="level-icon">{{ emojiForLevel(store.currentLevel.icon) }}</div>
+        <div class="level-icon">
+          <i class="fa-solid" :class="getFontAwesomeIcon(store.currentLevel.icon)" aria-hidden="true" />
+        </div>
         <div>
           <div class="level-name">{{ store.currentLevel.name }}</div>
           <div class="level-pts">{{ store.progress.totalPoints }} pontos</div>
         </div>
-        <Trophy :size="24" color="#f59e0b" />
+        <i class="fa-solid fa-trophy level-trophy" aria-hidden="true" />
       </div>
 
       <div v-if="store.nextLevel" class="level-progress-info">
@@ -64,11 +53,11 @@ const emojiForAch = (icon: string) =>
         </div>
       </div>
       <div v-else class="max-level">
-        🎉 Voce atingiu o nivel maximo!
+        <i class="fa-solid fa-circle-check" aria-hidden="true" />
+        Voce atingiu o nivel maximo!
       </div>
     </div>
 
-    <!-- Stats row -->
     <div class="stats-row">
       <div class="stat-card eco-card">
         <div class="stat-value">{{ store.progress.actionsCompleted }}</div>
@@ -84,7 +73,6 @@ const emojiForAch = (icon: string) =>
       </div>
     </div>
 
-    <!-- Levels -->
     <section class="section">
       <h2 class="section-title">Niveis</h2>
       <div class="levels-list">
@@ -94,17 +82,18 @@ const emojiForAch = (icon: string) =>
           class="level-item"
           :class="{ current: level.name === store.currentLevel.name }"
         >
-          <span class="level-emoji">{{ emojiForLevel(level.icon) }}</span>
+          <span class="level-icon-small">
+            <i class="fa-solid" :class="getFontAwesomeIcon(level.icon)" aria-hidden="true" />
+          </span>
           <div class="level-info">
             <span class="level-item-name">{{ level.name }}</span>
             <span class="level-item-range">{{ level.minPoints }}–{{ level.maxPoints === 99999 ? '+' : level.maxPoints }} pts</span>
           </div>
-          <Star v-if="level.name === store.currentLevel.name" :size="16" color="#f59e0b" />
+          <i v-if="level.name === store.currentLevel.name" class="fa-solid fa-star current-level-star" aria-hidden="true" />
         </div>
       </div>
     </section>
 
-    <!-- Achievements -->
     <section class="section">
       <h2 class="section-title">Conquistas</h2>
       <div class="achievements-grid">
@@ -115,8 +104,8 @@ const emojiForAch = (icon: string) =>
           :class="{ locked: !ach.unlocked }"
         >
           <div class="ach-icon">
-            <span v-if="ach.unlocked">{{ emojiForAch(ach.icon) }}</span>
-            <Lock v-else :size="20" color="#a8a29e" />
+            <i v-if="ach.unlocked" class="fa-solid" :class="getFontAwesomeIcon(ach.icon, 'fa-trophy')" aria-hidden="true" />
+            <i v-else class="fa-solid fa-lock locked-icon" aria-hidden="true" />
           </div>
           <div class="ach-info">
             <div class="ach-title">{{ ach.title }}</div>
@@ -126,7 +115,6 @@ const emojiForAch = (icon: string) =>
       </div>
     </section>
 
-    <!-- History -->
     <section class="section">
       <h2 class="section-title">Historico</h2>
       <div v-if="store.progress.history.length" class="history-list">
@@ -144,12 +132,6 @@ const emojiForAch = (icon: string) =>
       </div>
     </section>
 
-    <!-- Reset (demo only) -->
-    <div style="text-align:center;padding-bottom:1rem">
-      <button class="btn-ghost" style="font-size:0.8125rem;color:#a8a29e" @click="store.resetProgress()" id="reset-progress">
-        Reiniciar progresso demonstrativo
-      </button>
-    </div>
   </div>
 </template>
 
@@ -159,14 +141,18 @@ const emojiForAch = (icon: string) =>
 .level-card { padding: 1.5rem; }
 
 .level-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem; }
-.level-icon { font-size: 2.5rem; }
+.level-icon { font-size: 2.5rem; color: #16a34a; }
+.level-trophy { color: #f59e0b; font-size: 1.5rem; margin-left: auto; }
+.level-icon-small { width: 2rem; text-align: center; color: #16a34a; font-size: 1.25rem; }
+.current-level-star { color: #f59e0b; }
+.locked-icon { color: #a8a29e; font-size: 1.25rem; }
 .level-name { font-size: 1.125rem; font-weight: 700; color: #1c1917; }
 .level-pts { font-size: 0.875rem; color: #78716c; }
 
 .progress-label { font-size: 0.8125rem; color: #57534e; }
 .progress-pct { font-size: 0.8125rem; font-weight: 700; color: #16a34a; }
 .pts-to-next { font-size: 0.8125rem; color: #a8a29e; margin-top: 0.5rem; text-align: right; }
-.max-level { color: #16a34a; font-weight: 600; font-size: 0.9375rem; }
+.max-level { color: #16a34a; font-weight: 600; font-size: 0.9375rem; display: flex; align-items: center; gap: 0.5rem; }
 
 .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
 .stat-card { padding: 1rem; text-align: center; }
@@ -183,7 +169,6 @@ const emojiForAch = (icon: string) =>
   border: 1.5px solid #e7e5e4;
 }
 .level-item.current { border-color: #86efac; background: #f0fdf4; }
-.level-emoji { font-size: 1.375rem; }
 .level-info { flex: 1; }
 .level-item-name { font-size: 0.9375rem; font-weight: 600; color: #1c1917; display: block; }
 .level-item-range { font-size: 0.75rem; color: #a8a29e; }
@@ -193,7 +178,7 @@ const emojiForAch = (icon: string) =>
 
 .ach-card { display: flex; align-items: center; gap: 0.875rem; padding: 1rem; }
 .ach-card.locked { opacity: 0.5; }
-.ach-icon { width: 44px; height: 44px; border-radius: 0.75rem; background: #f5f5f4; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+.ach-icon { width: 44px; height: 44px; border-radius: 0.75rem; background: #f5f5f4; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; color: #16a34a; flex-shrink: 0; }
 .ach-title { font-size: 0.875rem; font-weight: 600; color: #1c1917; }
 .ach-desc { font-size: 0.75rem; color: #78716c; margin-top: 0.125rem; }
 

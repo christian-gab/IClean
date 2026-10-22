@@ -5,7 +5,6 @@ import { CATEGORY_LABELS } from '@/types'
 import { useFeedStore } from '@/stores/useFeedStore'
 import { useProgressStore } from '@/stores/useProgressStore'
 import { useAuthStore } from '@/stores/useAuthStore'
-import { X, Image, Eye, Edit3 } from '@lucide/vue'
 
 const auth = useAuthStore()
 
@@ -61,11 +60,10 @@ async function submitPost() {
           <div class="modal-header">
             <h2>Nova Publicacao</h2>
             <button class="btn-ghost" @click="closeModal" id="close-modal" aria-label="Fechar">
-              <X :size="20" />
+              <i class="fa-solid fa-xmark" aria-hidden="true" />
             </button>
           </div>
 
-          <!-- Tabs -->
           <div class="modal-tabs">
             <button
               class="tab-btn"
@@ -73,7 +71,7 @@ async function submitPost() {
               @click="showPreview = false"
               id="tab-edit"
             >
-              <Edit3 :size="14" /> Editar
+              <i class="fa-solid fa-pen-to-square" aria-hidden="true" /> Editar
             </button>
             <button
               class="tab-btn"
@@ -81,11 +79,10 @@ async function submitPost() {
               @click="showPreview = true"
               id="tab-preview"
             >
-              <Eye :size="14" /> Pre-visualizar
+              <i class="fa-solid fa-eye" aria-hidden="true" /> Pre-visualizar
             </button>
           </div>
 
-          <!-- Edit mode -->
           <div v-if="!showPreview" class="modal-form">
             <div class="user-row">
               <img :src="auth.user?.avatarUrl" :alt="auth.user?.name" class="avatar" width="40" height="40" />
@@ -111,7 +108,7 @@ async function submitPost() {
 
             <div class="form-row">
               <label class="form-label">
-                <Image :size="14" /> URL de imagem (opcional)
+                <i class="fa-solid fa-image" aria-hidden="true" /> URL de imagem (opcional)
               </label>
               <input
                 v-model="imageUrl"
@@ -123,7 +120,6 @@ async function submitPost() {
             </div>
           </div>
 
-          <!-- Preview mode -->
           <div v-else class="modal-preview">
             <div class="preview-card">
               <div class="post-header">

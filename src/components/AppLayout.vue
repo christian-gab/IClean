@@ -1,10 +1,21 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useProgressStore } from '@/stores/useProgressStore'
+import { useAuthStore } from '@/stores/useAuthStore'
 import AppSidebar from '@/components/AppSidebar.vue'
 import AppBottomNav from '@/components/AppBottomNav.vue'
 
 const route = useRoute()
+const progress = useProgressStore()
+const auth = useAuthStore()
+
+onMounted(() => {
+  if (auth.isAuthenticated) {
+    progress.loadAllGamificationData()
+  }
+})
+
 const pageTitle = computed(() => {
   const titles: Record<string, string> = {
     home: 'Feed',
@@ -12,7 +23,7 @@ const pageTitle = computed(() => {
     points: 'Pontos e Conquistas',
     profile: 'Meu Perfil',
   }
-  return titles[route.name as string] ?? 'EcoSocial'
+  return titles[route.name as string] ?? 'Iclean'
 })
 </script>
 

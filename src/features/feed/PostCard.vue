@@ -5,7 +5,6 @@ import { CATEGORY_LABELS, CATEGORY_COLORS } from '@/types'
 import { useFeedStore } from '@/stores/useFeedStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { timeAgo } from '@/utils/date'
-import { Heart, MessageCircle, Share2, ChevronDown, ChevronUp, Send } from '@lucide/vue'
 
 const props = defineProps<{ post: Post }>()
 const feed = useFeedStore()
@@ -63,8 +62,8 @@ async function share() {
   const text = `${authorName.value}: ${props.post.text}`
   if (navigator.share) {
     try {
-      await navigator.share({ title: 'EcoSocial', text, url })
-    } catch { /* cancelled */ }
+      await navigator.share({ title: 'Iclean', text, url })
+    } catch {}
   } else {
     await navigator.clipboard.writeText(url).catch(() => {})
     alert('Link copiado!')
@@ -74,7 +73,6 @@ async function share() {
 
 <template>
   <article class="eco-card post-card">
-    <!-- Header -->
     <div class="post-header">
       <img :src="authorAvatarUrl" :alt="authorName" class="avatar" width="40" height="40" />
       <div class="post-meta">
@@ -86,11 +84,9 @@ async function share() {
       </span>
     </div>
 
-    <!-- Body -->
     <p class="post-text">{{ post.text }}</p>
     <img v-if="post.imageUrl" :src="post.imageUrl" :alt="'Imagem do post'" class="post-image" />
 
-    <!-- Actions -->
     <div class="post-actions">
       <button
         class="action-btn"
@@ -99,23 +95,22 @@ async function share() {
         :aria-label="post.likedByMe ? 'Descurtir' : 'Curtir'"
         :id="`like-${post.id}`"
       >
-        <Heart :size="18" :fill="post.likedByMe ? 'currentColor' : 'none'" />
+        <i :class="post.likedByMe ? 'fa-solid fa-heart' : 'fa-regular fa-heart'" aria-hidden="true" />
         <span>{{ post.likes }}</span>
       </button>
 
       <button class="action-btn" @click="toggleComments" :id="`comments-${post.id}`" :aria-label="'Ver comentarios'">
-        <MessageCircle :size="18" />
+        <i class="fa-solid fa-comment" aria-hidden="true" />
         <span>{{ post.comments.length }}</span>
-        <ChevronUp v-if="showComments" :size="14" />
-        <ChevronDown v-else :size="14" />
+        <i v-if="showComments" class="fa-solid fa-chevron-up" aria-hidden="true" />
+        <i v-else class="fa-solid fa-chevron-down" aria-hidden="true" />
       </button>
 
       <button class="action-btn" @click="share" :id="`share-${post.id}`" :aria-label="'Compartilhar'">
-        <Share2 :size="18" />
+        <i class="fa-solid fa-share-nodes" aria-hidden="true" />
       </button>
     </div>
 
-    <!-- Comments -->
     <Transition name="slide-up">
       <div v-if="showComments" class="comments-section">
         <div v-if="post.comments.length" class="comments-list">
@@ -129,7 +124,6 @@ async function share() {
         </div>
         <p v-else class="no-comments">Seja o primeiro a comentar.</p>
 
-        <!-- Comment input -->
         <div class="comment-input-row">
           <input
             v-model="commentText"
@@ -147,7 +141,7 @@ async function share() {
             @click="submitComment"
             :id="`comment-submit-${post.id}`"
           >
-            <Send :size="14" />
+            <i class="fa-solid fa-paper-plane" aria-hidden="true" />
           </button>
         </div>
       </div>

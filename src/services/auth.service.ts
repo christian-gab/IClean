@@ -17,10 +17,19 @@ export interface UserResponse {
 }
 
 export const authService = {
-  async login(name: string, username: string): Promise<{ user: User; token: string }> {
+  async login(email: string, password: string): Promise<{ user: User; token: string }> {
     const { data } = await httpClient.post<LoginResponse>('/auth/login', {
+      email,
+      password,
+    })
+    return data.data
+  },
+
+  async register(name: string, email: string, password: string): Promise<{ user: User; token: string }> {
+    const { data } = await httpClient.post<LoginResponse>('/auth/register', {
       name,
-      username,
+      email,
+      password,
     })
     return data.data
   },

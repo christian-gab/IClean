@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import type { User } from '@/types'
 import { storage } from '@/utils/storage'
 import { authService } from '@/services'
+import { useProgressStore } from './useProgressStore'
 
 const STORAGE_KEY = 'auth'
 
@@ -31,15 +32,22 @@ export const useAuthStore = defineStore('auth', () => {
     })
   }
 
-  async function login(name: string, username: string): Promise<User> {
+  async function login(email: string, password: string): Promise<User> {
     isLoading.value = true
     error.value = null
     try {
-      const data = await authService.login(name, username)
+      const data = await authService.login(email, password)
       user.value = data.user
       token.value = data.token
       isLoggedIn.value = true
       save()
+      try {
+        const progressStore = useProgressStore()
+        progressStore.resetToDefault()
+        progressStore.loadAllGamificationData()
+      } catch (e) {
+        console.warn('Erro ao carregar dados de gamificação:', e)
+      }
       return data.user
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Falha ao realizar login'
@@ -63,11 +71,43 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function register(name: string, email: string, password: string): Promise<User> {
+    isLoading.value = true
+    error.value = null
+    try {
+      const data = await authService.register(name, email, password)
+      user.value = data.user
+      token.value = data.token
+      isLoggedIn.value = true
+      save()
+      try {
+        const progressStore = useProgressStore()
+        progressStore.resetToDefault()
+        progressStore.loadAllGamificationData()
+      } catch (e) {
+        console.warn('Erro ao carregar dados de gamificação:', e)
+      }
+      return data.user
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Falha ao criar conta'
+      error.value = msg
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   function logout() {
     user.value = null
     token.value = null
     isLoggedIn.value = false
     storage.clearAll()
+    try {
+      const progressStore = useProgressStore()
+      progressStore.resetToDefault()
+    } catch (e) {
+      console.warn('Erro ao limpar dados de gamificação:', e)
+    }
   }
 
   async function updateProfile(updates: { name?: string; bio?: string; avatarUrl?: string }): Promise<User | null> {
@@ -96,6 +136,7 @@ export const useAuthStore = defineStore('auth', () => {
     isLoading,
     error,
     login,
+    register,
     logout,
     fetchMe,
     updateProfile,

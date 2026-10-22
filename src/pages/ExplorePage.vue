@@ -4,17 +4,16 @@ import type { PostCategory, SustainableAction } from '@/types'
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '@/types'
 import { useProgressStore } from '@/stores/useProgressStore'
 import { useActionStore } from '@/stores/useActionStore'
-import { Check, Star, ShieldCheck, Loader } from '@lucide/vue'
 import ActionProofModal from '@/features/actions/ActionProofModal.vue'
+import { getFontAwesomeIcon } from '@/utils/icons'
 
 const progressStore = useProgressStore()
 const actionStore = useActionStore()
 const activeFilter = ref<PostCategory | 'all'>('all')
 
-// Modal state
 const proofModal = ref<{
   action: SustainableAction
-  emoji: string
+  icon: string
 } | null>(null)
 
 const categories = [
@@ -32,18 +31,9 @@ function isCompleted(actionId: string) {
   return progressStore.progress.sessionCompletedActions.includes(actionId)
 }
 
-function getEmoji(icon: string) {
-  const map: Record<string, string> = {
-    Recycle: '♻️', GlassWater: '💧', ShoppingBag: '🛍️',
-    Droplets: '🚿', Droplet: '💦', RefreshCcw: '🔄',
-    MapPin: '📍', Sprout: '🌱', Bike: '🚲', Leaf: '🍃',
-  }
-  return map[icon] ?? '🌿'
-}
-
 function openProof(action: SustainableAction) {
   if (isCompleted(action.id)) return
-  proofModal.value = { action, emoji: getEmoji(action.icon) }
+  proofModal.value = { action, icon: getFontAwesomeIcon(action.icon) }
 }
 
 async function onApproved(actionId: string, _title: string, _points: number, proof?: { photoUrl?: string; description?: string }) {
@@ -73,12 +63,11 @@ onMounted(() => {
         Escolha acoes sustentaveis para realizar e ganhe pontos. Cada pequena acao faz diferenca!
       </p>
       <div class="validation-notice">
-        <ShieldCheck :size="15" color="#16a34a" />
+        <i class="fa-solid fa-shield-halved" style="color:#16a34a" aria-hidden="true" />
         <span>Todas as acoes passam por validacao com foto para garantir autenticidade.</span>
       </div>
     </div>
 
-    <!-- Filter -->
     <div class="filter-chips" style="margin-bottom:1.25rem;display:flex;gap:.375rem;flex-wrap:wrap">
       <button
         v-for="[val, label] in categories"
@@ -92,13 +81,11 @@ onMounted(() => {
       </button>
     </div>
 
-    <!-- Loading state -->
     <div v-if="actionStore.isLoading" class="loading-state">
-      <Loader :size="28" class="spin" color="#16a34a" />
+      <i class="fa-solid fa-spinner spin" style="color:#16a34a" aria-hidden="true" />
       <p>Carregando ações sustentáveis...</p>
     </div>
 
-    <!-- Actions grid -->
     <div v-else class="actions-grid">
       <div
         v-for="action in filteredActions"
@@ -107,7 +94,7 @@ onMounted(() => {
         :class="{ completed: isCompleted(action.id) }"
       >
         <div class="action-icon" :style="{ background: CATEGORY_COLORS[action.category] + '18', color: CATEGORY_COLORS[action.category] }">
-          {{ getEmoji(action.icon) }}
+          <i class="fa-solid" :class="getFontAwesomeIcon(action.icon)" aria-hidden="true" />
         </div>
 
         <div class="action-content">
@@ -115,7 +102,7 @@ onMounted(() => {
           <p class="action-desc">{{ action.description }}</p>
           <div class="action-footer">
             <span class="points-badge">
-              <Star :size="12" /> +{{ action.points }} pts
+              <i class="fa-solid fa-star" aria-hidden="true" /> +{{ action.points }} pts
             </span>
             <button
               v-if="!isCompleted(action.id)"
@@ -127,21 +114,20 @@ onMounted(() => {
               Concluir
             </button>
             <span v-else class="done-badge">
-              <Check :size="14" /> Feito hoje
+              <i class="fa-solid fa-check" aria-hidden="true" /> Feito hoje
             </span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Proof Modal -->
     <Transition name="fade">
       <ActionProofModal
         v-if="proofModal"
         :action-id="proofModal.action.id"
         :action-title="proofModal.action.title"
         :action-points="proofModal.action.points"
-        :action-emoji="proofModal.emoji"
+        :action-icon="proofModal.icon"
         @close="proofModal = null"
         @approved="onApproved"
       />

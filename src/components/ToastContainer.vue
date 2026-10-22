@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { useProgressStore } from '@/stores/useProgressStore'
-import { Star, Award, Shield, ArrowUp, Check } from '@lucide/vue'
 
 const store = useProgressStore()
 
-const iconMap: Record<string, unknown> = {
-  Star, Award, Shield, ArrowUp, Check,
+const iconMap: Record<string, string> = {
+  Star: 'fa-star',
+  Award: 'fa-award',
+  Shield: 'fa-shield-halved',
+  ArrowUp: 'fa-arrow-up',
+  Check: 'fa-check',
 }
 </script>
 
@@ -19,12 +22,13 @@ const iconMap: Record<string, unknown> = {
           class="toast"
           :class="toast.type"
         >
-          <component
+          <i
             v-if="toast.icon && iconMap[toast.icon]"
-            :is="iconMap[toast.icon]"
-            :size="16"
+            class="fa-solid"
+            :class="iconMap[toast.icon]"
+            aria-hidden="true"
           />
-          <Check v-else-if="toast.type === 'success'" :size="16" />
+          <i v-else-if="toast.type === 'success'" class="fa-solid fa-check" aria-hidden="true" />
           {{ toast.message }}
         </div>
       </TransitionGroup>

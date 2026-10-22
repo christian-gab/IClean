@@ -2,6 +2,7 @@ export interface User {
   id: string
   name: string
   username: string
+  email?: string
   bio: string
   avatarUrl: string
   joinedAt: string
@@ -101,10 +102,6 @@ export interface UserProgress {
   postsCreated: number
   unlockedAchievements: string[]
   history: CompletedAction[]
-  /**
-   * NOTE: Session-level deduplication only.
-   * This MUST be enforced server-side in production.
-   */
   sessionCompletedActions: string[]
 }
 

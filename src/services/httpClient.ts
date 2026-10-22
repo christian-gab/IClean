@@ -10,13 +10,16 @@ export const httpClient = axios.create({
   },
 })
 
-// Request Interceptor: adiciona headers de autenticação
 httpClient.interceptors.request.use(
   (config) => {
     try {
-      const storedAuth = localStorage.getItem('auth')
-      if (storedAuth) {
-        const parsed = JSON.parse(storedAuth)
+      const raw =
+        localStorage.getItem('iclean:auth') ||
+        localStorage.getItem('ecosocial:auth') ||
+        localStorage.getItem('auth')
+
+      if (raw) {
+        const parsed = JSON.parse(raw)
         if (parsed?.token) {
           config.headers.Authorization = `Bearer ${parsed.token}`
         }
@@ -32,7 +35,6 @@ httpClient.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
-// Response Interceptor: padroniza tratamento de erro
 httpClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError<{ message?: string; errors?: Array<{ message: string }> }>) => {

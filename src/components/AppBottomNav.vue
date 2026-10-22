@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { Home, Compass, Trophy, User } from '@lucide/vue'
 
 const route = useRoute()
 
 const navItems = [
-  { to: '/', name: 'home', label: 'Feed', icon: Home },
-  { to: '/explorar', name: 'explore', label: 'Explorar', icon: Compass },
-  { to: '/pontos', name: 'points', label: 'Pontos', icon: Trophy },
-  { to: '/perfil', name: 'profile', label: 'Perfil', icon: User },
+  { to: '/', name: 'home', label: 'Feed', icon: 'fa-house' },
+  { to: '/explorar', name: 'explore', label: 'Explorar', icon: 'fa-compass' },
+  { to: '/pontos', name: 'points', label: 'Pontos', icon: 'fa-trophy' },
+  { to: '/perfil', name: 'profile', label: 'Perfil', icon: 'fa-user' },
 ]
 </script>
 
@@ -21,7 +20,7 @@ const navItems = [
       class="bottom-nav-item"
       :class="{ active: route.name === item.name }"
     >
-      <component :is="item.icon" :size="22" />
+      <i class="fa-solid" :class="item.icon" aria-hidden="true" />
       <span>{{ item.label }}</span>
     </RouterLink>
   </nav>
@@ -53,6 +52,8 @@ const navItems = [
   font-weight: 500;
   transition: color 0.15s ease;
 }
+
+.bottom-nav-item i { font-size: 1.375rem; }
 
 .bottom-nav-item.active {
   color: #16a34a;

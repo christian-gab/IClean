@@ -5,7 +5,7 @@ import { useProgressStore } from "@/stores/useProgressStore"
 import { useAuthStore } from "@/stores/useAuthStore"
 import PostCard from "@/features/feed/PostCard.vue"
 import { formatDate } from "@/utils/date"
-import { Trophy, FileText, CheckCircle, Award, Pencil, Camera, X, Check, LogOut } from "@lucide/vue"
+import { getFontAwesomeIcon } from "@/utils/icons"
 import { useRouter } from "vue-router"
 
 const feed = useFeedStore()
@@ -19,20 +19,6 @@ const userPosts = computed(() =>
   feed.posts.filter(p => p.authorId === user.value?.id)
 )
 
-const emojiForLevel = (icon: string) =>
-  icon === "Sprout" ? "🌱" :
-  icon === "Leaf" ? "🍃" :
-  icon === "Trees" ? "🌳" :
-  icon === "Globe" ? "🌍" : "🌿"
-
-const emojiForAch = (icon: string) =>
-  icon === "Star" ? "⭐" :
-  icon === "Award" ? "🏅" :
-  icon === "Shield" ? "🛡️" :
-  icon === "MessageSquare" ? "💬" :
-  icon === "Megaphone" ? "📣" : "🏆"
-
-// --- Edit profile state ---
 const isEditing = ref(false)
 const editName = ref("")
 const editBio = ref("")
@@ -86,7 +72,6 @@ function randomizeAvatar() {
   editAvatarUrl.value = `https://api.dicebear.com/9.x/avataaars/svg?seed=${seed}&backgroundColor=b6e3f4`
 }
 
-// Update avatar seed on name change in edit mode
 watch(editName, (newName) => {
   if (!editAvatarUrl.value.startsWith("data:")) {
     const seed = encodeURIComponent(newName.trim() || "default")
@@ -102,7 +87,6 @@ function logout() {
 
 <template>
   <div class="profile-page">
-    <!-- Profile header -->
     <div class="profile-header eco-card">
       <div class="avatar-wrap">
         <img
@@ -112,9 +96,11 @@ function logout() {
           width="80"
           height="80"
         />
-        <div class="level-badge">{{ emojiForLevel(progress.currentLevel.icon) }}</div>
+        <div class="level-badge">
+          <i class="fa-solid" :class="getFontAwesomeIcon(progress.currentLevel.icon)" aria-hidden="true" />
+        </div>
         <button v-if="isEditing" class="avatar-edit-btn" title="Trocar foto" @click="avatarInputRef?.click()">
-          <Camera :size="14" />
+          <i class="fa-solid fa-camera" aria-hidden="true" />
         </button>
         <input
           ref="avatarInputRef"
@@ -125,7 +111,6 @@ function logout() {
         />
       </div>
 
-      <!-- View mode -->
       <div v-if="!isEditing" class="profile-info">
         <h2 class="profile-name">{{ user.name }}</h2>
         <p class="profile-username">{{ user.username }}</p>
@@ -133,15 +118,14 @@ function logout() {
         <p class="profile-joined">Membro desde {{ formatDate(user.joinedAt) }}</p>
         <div class="profile-actions">
           <button class="btn-secondary profile-edit-btn" @click="startEdit">
-            <Pencil :size="14" /> Editar perfil
+            <i class="fa-solid fa-pen" aria-hidden="true" /> Editar perfil
           </button>
           <button class="btn-ghost logout-btn" @click="logout">
-            <LogOut :size="14" /> Sair
+            <i class="fa-solid fa-right-from-bracket" aria-hidden="true" /> Sair
           </button>
         </div>
       </div>
 
-      <!-- Edit mode -->
       <div v-else class="profile-info edit-mode">
         <div class="edit-field">
           <label class="edit-label" for="edit-name">Nome</label>
@@ -155,45 +139,45 @@ function logout() {
           <label class="edit-label">Foto</label>
           <div class="avatar-url-row">
             <input v-model="editAvatarUrl" class="edit-input edit-input-sm" type="text" placeholder="URL da imagem" />
-            <button class="btn-ghost avatar-rand-btn" title="Gerar avatar aleatório" @click="randomizeAvatar">🎲</button>
+            <button class="btn-ghost avatar-rand-btn" title="Gerar avatar aleatório" @click="randomizeAvatar">
+              <i class="fa-solid fa-dice" aria-hidden="true" />
+            </button>
           </div>
         </div>
         <div class="edit-actions">
           <button class="btn-primary edit-save-btn" :disabled="!editName.trim()" @click="saveEdit">
-            <Check :size="15" /> Salvar
+            <i class="fa-solid fa-check" aria-hidden="true" /> Salvar
           </button>
           <button class="btn-secondary" @click="cancelEdit">
-            <X :size="15" /> Cancelar
+            <i class="fa-solid fa-xmark" aria-hidden="true" /> Cancelar
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Stats -->
     <div class="stats-row">
       <div class="stat-card eco-card">
-        <Trophy :size="20" color="#f59e0b" />
+        <i class="fa-solid fa-trophy profile-stat-icon trophy-icon" aria-hidden="true" />
         <div class="stat-value">{{ progress.progress.totalPoints }}</div>
         <div class="stat-label">Pontos</div>
       </div>
       <div class="stat-card eco-card">
-        <CheckCircle :size="20" color="#22c55e" />
+        <i class="fa-solid fa-circle-check profile-stat-icon actions-icon" aria-hidden="true" />
         <div class="stat-value">{{ progress.progress.actionsCompleted }}</div>
         <div class="stat-label">Acoes</div>
       </div>
       <div class="stat-card eco-card">
-        <FileText :size="20" color="#0ea5e9" />
+        <i class="fa-solid fa-file-lines profile-stat-icon posts-icon" aria-hidden="true" />
         <div class="stat-value">{{ userPosts.length }}</div>
         <div class="stat-label">Posts</div>
       </div>
       <div class="stat-card eco-card">
-        <Award :size="20" color="#7c3aed" />
+        <i class="fa-solid fa-award profile-stat-icon achievement-icon" aria-hidden="true" />
         <div class="stat-value">{{ progress.unlockedAchievements.length }}</div>
         <div class="stat-label">Conquistas</div>
       </div>
     </div>
 
-    <!-- Level progress -->
     <div class="eco-card level-section">
       <div class="level-top">
         <span class="level-tag">{{ progress.currentLevel.name }}</span>
@@ -210,7 +194,6 @@ function logout() {
       </div>
     </div>
 
-    <!-- Achievements unlocked -->
     <section v-if="progress.unlockedAchievements.length" class="section">
       <h2 class="section-title">Conquistas Desbloqueadas</h2>
       <div class="ach-chips">
@@ -219,12 +202,12 @@ function logout() {
           :key="achievement.id"
           class="ach-chip"
         >
-          {{ emojiForAch(achievement.icon) }} {{ achievement.title }}
+          <i class="fa-solid" :class="getFontAwesomeIcon(achievement.icon, 'fa-trophy')" aria-hidden="true" />
+          {{ achievement.title }}
         </div>
       </div>
     </section>
 
-    <!-- My posts -->
     <section class="section">
       <h2 class="section-title">Minhas Publicacoes</h2>
       <div v-if="userPosts.length">
@@ -272,7 +255,6 @@ function logout() {
 .logout-btn { font-size: 0.8125rem; padding: 0.375rem 0.875rem; color: #dc2626; }
 .logout-btn:hover { background: #fef2f2; color: #dc2626; }
 
-/* Edit mode */
 .edit-mode { display: flex; flex-direction: column; gap: 0.625rem; }
 .edit-field { display: flex; flex-direction: column; gap: 0.25rem; }
 .edit-label { font-size: 0.75rem; font-weight: 600; color: #78716c; text-transform: uppercase; letter-spacing: 0.04em; }
@@ -301,6 +283,11 @@ function logout() {
 
 .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.625rem; }
 .stat-card { padding: 0.875rem 0.5rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; }
+.profile-stat-icon { font-size: 1.25rem; }
+.trophy-icon { color: #f59e0b; }
+.actions-icon { color: #22c55e; }
+.posts-icon { color: #0ea5e9; }
+.achievement-icon { color: #7c3aed; }
 .stat-value { font-size: 1.375rem; font-weight: 800; color: #1c1917; }
 .stat-label { font-size: 0.6875rem; color: #78716c; }
 

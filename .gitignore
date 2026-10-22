@@ -14,6 +14,25 @@ dist-ssr
 coverage
 *.local
 
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+!.env.*.example
+.npmrc
+!.npmrc.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Local databases, dumps, and backups
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.bak
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

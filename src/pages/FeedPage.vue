@@ -6,7 +6,6 @@ import { useFeedStore } from '@/stores/useFeedStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import PostCard from '@/features/feed/PostCard.vue'
 import CreatePostModal from '@/features/feed/CreatePostModal.vue'
-import { Plus, SlidersHorizontal, Loader } from '@lucide/vue'
 
 const feed = useFeedStore()
 const auth = useAuthStore()
@@ -28,18 +27,16 @@ onMounted(() => {
 
 <template>
   <div class="feed-page">
-    <!-- Create post prompt -->
     <div class="create-prompt eco-card" @click="showModal = true" role="button" id="open-create-post">
       <img :src="auth.user?.avatarUrl" :alt="auth.user?.name" class="avatar" width="36" height="36" />
-      <div class="prompt-placeholder">O que voce quer compartilhar hoje?</div>
+      <div class="prompt-placeholder">O que você quer compartilhar hoje?</div>
       <button class="btn-primary" style="flex-shrink:0" @click.stop="showModal = true" id="btn-new-post">
-        <Plus :size="16" /> Publicar
+        <i class="fa-solid fa-plus" aria-hidden="true" /> Publicar
       </button>
     </div>
 
-    <!-- Category filter -->
     <div class="filter-bar">
-      <SlidersHorizontal :size="16" color="#a8a29e" />
+      <i class="fa-solid fa-sliders" style="color:#a8a29e" aria-hidden="true" />
       <div class="filter-chips">
         <button
           v-for="[val, label] in categories"
@@ -54,13 +51,11 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Loading state -->
     <div v-if="feed.isLoading" class="loading-state">
-      <Loader :size="28" class="spin" color="#16a34a" />
+      <i class="fa-solid fa-spinner spin" style="color:#16a34a" aria-hidden="true" />
       <p>Carregando publicações...</p>
     </div>
 
-    <!-- Posts -->
     <div v-else-if="feed.filteredPosts.length" class="posts-list">
       <TransitionGroup name="slide-up">
         <PostCard v-for="post in feed.filteredPosts" :key="post.id" :post="post" />
@@ -68,12 +63,11 @@ onMounted(() => {
     </div>
 
     <div v-else class="empty-state">
-      <div class="empty-icon">🌿</div>
+      <div class="empty-icon"><i class="fa-solid fa-seedling" aria-hidden="true" /></div>
       <p>Nenhuma publicacao nessa categoria.</p>
       <button class="btn-secondary" @click="setFilter('all')" id="clear-filter">Ver todas</button>
     </div>
 
-    <!-- Modal -->
     <Transition name="fade">
       <CreatePostModal v-if="showModal" @close="showModal = false" />
     </Transition>
@@ -123,4 +117,28 @@ onMounted(() => {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .empty-icon { font-size: 3rem; }
+
+@media (max-width: 480px) {
+  .create-prompt {
+    gap: 0.5rem;
+    padding: 0.625rem 0.75rem;
+  }
+
+  .prompt-placeholder {
+    min-width: 0;
+    padding: 0.375rem 0.625rem;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .create-prompt > .btn-primary {
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+}
 </style>

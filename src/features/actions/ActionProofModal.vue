@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { ref, computed } from "vue"
-import { X, Camera, Upload, CheckCircle, XCircle, Loader, Star } from "@lucide/vue"
 
 const props = defineProps<{
   actionId: string
   actionTitle: string
   actionPoints: number
-  actionEmoji: string
+  actionIcon: string
 }>()
 
 const emit = defineEmits<{
@@ -14,7 +13,6 @@ const emit = defineEmits<{
   approved: [actionId: string, title: string, points: number, proof?: { photoUrl?: string; description?: string }]
 }>()
 
-// ── State ────────────────────────────────────────────────────────────────────
 type Step = "upload" | "validating" | "approved" | "rejected"
 const step = ref<Step>("upload")
 const description = ref("")
@@ -25,7 +23,6 @@ const progressInterval = ref<ReturnType<typeof setInterval> | null>(null)
 
 const canSubmit = computed(() => imagePreview.value !== null)
 
-// ── Image handling ────────────────────────────────────────────────────────────
 function pickFile() {
   fileInput.value?.click()
 }
@@ -46,18 +43,15 @@ function removeImage() {
   if (fileInput.value) fileInput.value.value = ""
 }
 
-// ── Validation flow (mocked) ──────────────────────────────────────────────────
 async function submitForValidation() {
   if (!canSubmit.value) return
   step.value = "validating"
   validationProgress.value = 0
 
-  // Simulate progress bar
   progressInterval.value = setInterval(() => {
     validationProgress.value = Math.min(validationProgress.value + Math.random() * 8, 95)
   }, 150)
 
-  // Wait 3–4s to simulate backend AI analysis
   await new Promise(r => setTimeout(r, 3000 + Math.random() * 1000))
 
   if (progressInterval.value) clearInterval(progressInterval.value)
@@ -65,7 +59,6 @@ async function submitForValidation() {
 
   await new Promise(r => setTimeout(r, 400))
 
-  // 90% approval rate (fair but not guaranteed)
   const approved = Math.random() < 0.9
   step.value = approved ? "approved" : "rejected"
 }
@@ -91,21 +84,21 @@ function retry() {
       <Transition name="scale">
         <div class="modal">
 
-          <!-- Header -->
           <div class="modal-header">
             <div class="header-title">
-              <span class="action-emoji">{{ actionEmoji }}</span>
+              <span class="action-icon">
+                <i class="fa-solid" :class="actionIcon" aria-hidden="true" />
+              </span>
               <div>
                 <h2>{{ actionTitle }}</h2>
-                <span class="points-chip"><Star :size="12" /> +{{ actionPoints }} pts</span>
+                <span class="points-chip"><i class="fa-solid fa-star" aria-hidden="true" /> +{{ actionPoints }} pts</span>
               </div>
             </div>
             <button class="btn-ghost icon-btn" @click="emit('close')" aria-label="Fechar">
-              <X :size="20" />
+              <i class="fa-solid fa-xmark" aria-hidden="true" />
             </button>
           </div>
 
-          <!-- ── Step: Upload ── -->
           <div v-if="step === 'upload'" class="modal-body">
             <p class="step-desc">
               Para garantir a autenticidade das acoes e evitar pontos indevidos,
@@ -113,7 +106,6 @@ function retry() {
               A descricao e opcional.
             </p>
 
-            <!-- Photo zone -->
             <div
               class="photo-zone"
               :class="{ 'has-image': imagePreview }"
@@ -121,17 +113,17 @@ function retry() {
             >
               <img v-if="imagePreview" :src="imagePreview" alt="Foto da acao" class="photo-preview" />
               <div v-else class="photo-placeholder">
-                <Camera :size="32" color="#a8a29e" />
+                <i class="fa-solid fa-camera photo-camera-icon" aria-hidden="true" />
                 <p>Toque para tirar ou enviar uma foto</p>
                 <span class="photo-hint">JPG, PNG, WEBP — max 10 MB</span>
               </div>
               <button v-if="imagePreview" class="remove-photo" @click.stop="removeImage" aria-label="Remover foto">
-                <X :size="14" />
+                <i class="fa-solid fa-xmark" aria-hidden="true" />
               </button>
             </div>
 
             <button v-if="!imagePreview" class="upload-btn" @click="pickFile">
-              <Upload :size="16" /> Escolher arquivo
+              <i class="fa-solid fa-upload" aria-hidden="true" /> Escolher arquivo
             </button>
 
             <input
@@ -143,7 +135,6 @@ function retry() {
               @change="onFileChange"
             />
 
-            <!-- Description -->
             <div class="field">
               <label class="field-label" for="proof-desc">Descricao (opcional)</label>
               <textarea
@@ -167,10 +158,9 @@ function retry() {
             </div>
           </div>
 
-          <!-- ── Step: Validating ── -->
           <div v-else-if="step === 'validating'" class="modal-body validating-body">
             <div class="validate-anim">
-              <Loader :size="40" color="#16a34a" class="spin-icon" />
+              <i class="fa-solid fa-spinner spin-icon" aria-hidden="true" />
             </div>
             <h3 class="validate-title">Validando sua acao...</h3>
             <p class="validate-sub">Nossa IA esta analisando a foto para confirmar a acao sustentavel.</p>
@@ -181,31 +171,35 @@ function retry() {
               <span class="val-progress-pct">{{ Math.round(validationProgress) }}%</span>
             </div>
             <ul class="val-steps">
-              <li :class="{ done: validationProgress > 20 }">✓ Verificando qualidade da imagem</li>
-              <li :class="{ done: validationProgress > 50 }">✓ Identificando a acao realizada</li>
-              <li :class="{ done: validationProgress > 80 }">✓ Confirmando autenticidade</li>
+              <li :class="{ done: validationProgress > 20 }">
+                <i class="fa-solid fa-check" aria-hidden="true" /> Verificando qualidade da imagem
+              </li>
+              <li :class="{ done: validationProgress > 50 }">
+                <i class="fa-solid fa-check" aria-hidden="true" /> Identificando a acao realizada
+              </li>
+              <li :class="{ done: validationProgress > 80 }">
+                <i class="fa-solid fa-check" aria-hidden="true" /> Confirmando autenticidade
+              </li>
             </ul>
           </div>
 
-          <!-- ── Step: Approved ── -->
           <div v-else-if="step === 'approved'" class="modal-body result-body">
             <div class="result-icon approved-icon">
-              <CheckCircle :size="48" color="#16a34a" />
+              <i class="fa-solid fa-circle-check" aria-hidden="true" />
             </div>
-            <h3 class="result-title">Acao Validada! 🎉</h3>
+            <h3 class="result-title">Acao Validada!</h3>
             <p class="result-sub">
               Sua foto foi analisada e a acao foi confirmada como autentica.
               Voce ganhou <strong>+{{ actionPoints }} pontos</strong>!
             </p>
             <button class="btn-primary collect-btn" @click="collectPoints">
-              <Star :size="16" /> Coletar +{{ actionPoints }} pts
+              <i class="fa-solid fa-star" aria-hidden="true" /> Coletar +{{ actionPoints }} pts
             </button>
           </div>
 
-          <!-- ── Step: Rejected ── -->
           <div v-else-if="step === 'rejected'" class="modal-body result-body">
             <div class="result-icon rejected-icon">
-              <XCircle :size="48" color="#dc2626" />
+              <i class="fa-solid fa-circle-xmark" aria-hidden="true" />
             </div>
             <h3 class="result-title">Nao foi possivel validar</h3>
             <p class="result-sub">
@@ -250,7 +244,6 @@ function retry() {
   box-shadow: 0 24px 64px rgba(0,0,0,.22);
 }
 
-/* Header */
 .modal-header {
   display: flex; align-items: flex-start; justify-content: space-between;
   padding: 1.25rem 1.5rem;
@@ -260,7 +253,7 @@ function retry() {
 .header-title {
   display: flex; align-items: center; gap: 0.75rem;
 }
-.action-emoji { font-size: 2rem; line-height: 1; flex-shrink: 0; }
+.action-icon { color: #16a34a; font-size: 2rem; line-height: 1; flex-shrink: 0; }
 .header-title h2 {
   margin: 0 0 0.25rem;
   font-size: 1rem; font-weight: 700; color: #1c1917;
@@ -274,7 +267,6 @@ function retry() {
 }
 .icon-btn { padding: 0.375rem; flex-shrink: 0; }
 
-/* Body */
 .modal-body { padding: 1.375rem 1.5rem; display: flex; flex-direction: column; gap: 1.125rem; }
 
 .step-desc {
@@ -282,7 +274,6 @@ function retry() {
 }
 .step-desc strong { color: #1c1917; }
 
-/* Photo zone */
 .photo-zone {
   border: 2px dashed #d6d3d1;
   border-radius: 1rem;
@@ -303,6 +294,7 @@ function retry() {
   display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
   padding: 2rem 1rem; text-align: center;
 }
+.photo-camera-icon { color: #a8a29e; font-size: 2rem; }
 .photo-placeholder p { margin: 0; font-size: 0.9375rem; color: #78716c; font-weight: 500; }
 .photo-hint { font-size: 0.75rem; color: #a8a29e; }
 
@@ -331,7 +323,6 @@ function retry() {
 }
 .upload-btn:hover { background: #e7e5e4; border-color: #a8a29e; }
 
-/* Field */
 .field { display: flex; flex-direction: column; gap: 0.375rem; }
 .field-label { font-size: 0.8125rem; font-weight: 600; color: #57534e; }
 .field-textarea {
@@ -347,17 +338,15 @@ function retry() {
   background: white;
 }
 
-/* Footer */
 .modal-footer {
   display: flex; justify-content: flex-end; gap: 0.75rem;
   padding-top: 0.25rem;
 }
 .submit-btn:disabled { opacity: .45; cursor: not-allowed; }
 
-/* Validating */
 .validating-body { align-items: center; text-align: center; padding: 2rem 1.5rem; }
 .validate-anim { margin-bottom: 0.5rem; }
-.spin-icon { animation: spin 1s linear infinite; }
+.spin-icon { color: #16a34a; font-size: 2.5rem; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .validate-title { margin: 0 0 0.375rem; font-size: 1.125rem; font-weight: 700; color: #1c1917; }
@@ -389,9 +378,10 @@ function retry() {
 }
 .val-steps li.done { color: #16a34a; font-weight: 500; }
 
-/* Results */
 .result-body { align-items: center; text-align: center; padding: 2rem 1.5rem; }
-.result-icon { margin-bottom: 0.75rem; }
+.result-icon { margin-bottom: 0.75rem; font-size: 3rem; }
+.approved-icon { color: #16a34a; }
+.rejected-icon { color: #dc2626; }
 .approved-icon { animation: pop 0.4s cubic-bezier(0.34,1.56,0.64,1); }
 .rejected-icon { animation: pop 0.4s cubic-bezier(0.34,1.56,0.64,1); }
 @keyframes pop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }

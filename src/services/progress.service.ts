@@ -40,8 +40,4 @@ export const progressService = {
     return data.data.achievements
   },
 
-  async resetProgress(): Promise<UserProgress> {
-    const { data } = await httpClient.post<ProgressResponse>('/progress/reset')
-    return data.data.progress
-  },
 }
