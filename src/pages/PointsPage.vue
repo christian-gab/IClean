@@ -28,7 +28,7 @@ onMounted(() => {
 
 <template>
   <div class="points-page">
-    <div class="level-card eco-card">
+    <div class="level-card card-ds">
       <div class="level-header">
         <div class="level-icon">
           <i class="fa-solid" :class="getFontAwesomeIcon(store.currentLevel.icon)" aria-hidden="true" />
@@ -54,32 +54,32 @@ onMounted(() => {
       </div>
       <div v-else class="max-level">
         <i class="fa-solid fa-circle-check" aria-hidden="true" />
-        Voce atingiu o nivel maximo!
+        Você atingiu o nível máximo!
       </div>
     </div>
 
     <div class="stats-row">
-      <div class="stat-card eco-card">
+      <div class="stat-card card-ds">
         <div class="stat-value">{{ store.progress.actionsCompleted }}</div>
-        <div class="stat-label">Acoes concluidas</div>
+        <div class="stat-label label-ds">Ações concluídas</div>
       </div>
-      <div class="stat-card eco-card">
+      <div class="stat-card card-ds">
         <div class="stat-value">{{ store.progress.postsCreated }}</div>
-        <div class="stat-label">Publicacoes</div>
+        <div class="stat-label label-ds">Publicações</div>
       </div>
-      <div class="stat-card eco-card">
+      <div class="stat-card card-ds">
         <div class="stat-value">{{ store.unlockedAchievements.length }}</div>
-        <div class="stat-label">Conquistas</div>
+        <div class="stat-label label-ds">Conquistas</div>
       </div>
     </div>
 
     <section class="section">
-      <h2 class="section-title">Niveis</h2>
+      <h2 class="section-title">Níveis</h2>
       <div class="levels-list">
         <div
           v-for="level in displayLevels"
           :key="level.name"
-          class="level-item"
+          class="level-item card-ds"
           :class="{ current: level.name === store.currentLevel.name }"
         >
           <span class="level-icon-small">
@@ -100,7 +100,7 @@ onMounted(() => {
         <div
           v-for="ach in achievementsWithStatus"
           :key="ach.id"
-          class="ach-card eco-card"
+          class="ach-card card-ds"
           :class="{ locked: !ach.unlocked }"
         >
           <div class="ach-icon">
@@ -116,8 +116,8 @@ onMounted(() => {
     </section>
 
     <section class="section">
-      <h2 class="section-title">Historico</h2>
-      <div v-if="store.progress.history.length" class="history-list">
+      <h2 class="section-title">Histórico</h2>
+      <div v-if="store.progress.history.length" class="history-list card-ds">
         <div v-for="item in store.progress.history" :key="item.id" class="history-item">
           <div class="history-dot" />
           <div class="history-content">
@@ -127,8 +127,8 @@ onMounted(() => {
           <span class="history-pts">+{{ item.points }}</span>
         </div>
       </div>
-      <div v-else class="empty-state">
-        <p>Nenhuma acao registrada ainda. Explore e comece a acumular pontos!</p>
+      <div v-else class="empty-state card-ds">
+        <p>Nenhuma ação registrada ainda. Explore e comece a acumular pontos!</p>
       </div>
     </section>
 
@@ -136,63 +136,62 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.points-page { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem; }
+.points-page { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem; }
 
-.level-card { padding: 1.5rem; }
+.level-card { padding: 1.25rem; }
 
-.level-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem; }
-.level-icon { font-size: 2.5rem; color: #16a34a; }
-.level-trophy { color: #f59e0b; font-size: 1.5rem; margin-left: auto; }
-.level-icon-small { width: 2rem; text-align: center; color: #16a34a; font-size: 1.25rem; }
-.current-level-star { color: #f59e0b; }
-.locked-icon { color: #a8a29e; font-size: 1.25rem; }
-.level-name { font-size: 1.125rem; font-weight: 700; color: #1c1917; }
-.level-pts { font-size: 0.875rem; color: #78716c; }
+.level-header { display: flex; align-items: center; gap: 0.875rem; margin-bottom: 1rem; }
+.level-icon { font-size: 2rem; color: var(--color-primary); }
+.level-trophy { color: #d97706; font-size: 1.25rem; margin-left: auto; }
+.level-icon-small { width: 1.75rem; text-align: center; color: var(--color-primary); font-size: 1rem; }
+.current-level-star { color: #d97706; font-size: 0.875rem; }
+.locked-icon { color: #a8a29e; font-size: 1rem; }
+.level-name { font-size: 1rem; font-weight: 600; color: #111827; }
+.level-pts { font-size: 0.8125rem; color: #78716c; }
 
-.progress-label { font-size: 0.8125rem; color: #57534e; }
-.progress-pct { font-size: 0.8125rem; font-weight: 700; color: #16a34a; }
-.pts-to-next { font-size: 0.8125rem; color: #a8a29e; margin-top: 0.5rem; text-align: right; }
-.max-level { color: #16a34a; font-weight: 600; font-size: 0.9375rem; display: flex; align-items: center; gap: 0.5rem; }
+.progress-label { font-size: 0.75rem; color: #57534e; }
+.progress-pct { font-size: 0.75rem; font-weight: 600; color: var(--color-primary); }
+.pts-to-next { font-size: 0.75rem; color: #78716c; margin-top: 0.375rem; text-align: right; }
+.max-level { color: var(--color-primary); font-weight: 500; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem; }
 
-.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
-.stat-card { padding: 1rem; text-align: center; }
-.stat-value { font-size: 1.75rem; font-weight: 800; color: #1c1917; }
-.stat-label { font-size: 0.75rem; color: #78716c; margin-top: 0.25rem; }
+.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.625rem; }
+.stat-card { padding: 0.875rem 0.5rem; text-align: center; }
+.stat-value { font-size: 1.5rem; font-weight: 700; color: #111827; }
+.stat-label { margin-top: 0.25rem; font-size: 10px; }
 
-.section { }
-.section-title { font-size: 1rem; font-weight: 700; color: #1c1917; margin: 0 0 0.875rem; }
+.section { margin-top: 0.25rem; }
+.section-title { font-size: 0.9375rem; font-weight: 600; color: #111827; margin: 0 0 0.625rem; }
 
-.levels-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.levels-list { display: flex; flex-direction: column; gap: 0.375rem; }
 .level-item {
   display: flex; align-items: center; gap: 0.75rem;
-  padding: 0.75rem 1rem; background: white; border-radius: 0.75rem;
-  border: 1.5px solid #e7e5e4;
+  padding: 0.625rem 0.875rem;
 }
-.level-item.current { border-color: #86efac; background: #f0fdf4; }
+.level-item.current { border-color: var(--color-primary); background: #f0fdf4; }
 .level-info { flex: 1; }
-.level-item-name { font-size: 0.9375rem; font-weight: 600; color: #1c1917; display: block; }
-.level-item-range { font-size: 0.75rem; color: #a8a29e; }
+.level-item-name { font-size: 0.875rem; font-weight: 600; color: #111827; display: block; }
+.level-item-range { font-size: 0.75rem; color: #78716c; }
 
-.achievements-grid { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
+.achievements-grid { display: grid; grid-template-columns: 1fr; gap: 0.625rem; }
 @media (min-width: 480px) { .achievements-grid { grid-template-columns: 1fr 1fr; } }
 
-.ach-card { display: flex; align-items: center; gap: 0.875rem; padding: 1rem; }
-.ach-card.locked { opacity: 0.5; }
-.ach-icon { width: 44px; height: 44px; border-radius: 0.75rem; background: #f5f5f4; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; color: #16a34a; flex-shrink: 0; }
-.ach-title { font-size: 0.875rem; font-weight: 600; color: #1c1917; }
+.ach-card { display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem; }
+.ach-card.locked { opacity: 0.55; }
+.ach-icon { width: 38px; height: 38px; border-radius: var(--radius); background: #f5f5f4; display: flex; align-items: center; justify-content: center; font-size: 1.125rem; color: var(--color-primary); flex-shrink: 0; }
+.ach-title { font-size: 0.8125rem; font-weight: 600; color: #111827; }
 .ach-desc { font-size: 0.75rem; color: #78716c; margin-top: 0.125rem; }
 
-.history-list { display: flex; flex-direction: column; gap: 0; background: white; border-radius: 1rem; border: 1px solid #e7e5e4; overflow: hidden; }
+.history-list { display: flex; flex-direction: column; gap: 0; overflow: hidden; }
 .history-item {
-  display: flex; align-items: center; gap: 0.875rem;
-  padding: 0.875rem 1.25rem; border-bottom: 1px solid #f5f5f4;
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border);
 }
 .history-item:last-child { border-bottom: none; }
-.history-dot { width: 8px; height: 8px; border-radius: 9999px; background: #22c55e; flex-shrink: 0; }
+.history-dot { width: 6px; height: 6px; border-radius: var(--radius); background: var(--color-primary); flex-shrink: 0; }
 .history-content { flex: 1; }
-.history-action { font-size: 0.875rem; font-weight: 500; color: #1c1917; display: block; }
-.history-date { font-size: 0.75rem; color: #a8a29e; }
-.history-pts { font-size: 0.875rem; font-weight: 700; color: #16a34a; }
+.history-action { font-size: 0.8125rem; font-weight: 500; color: #111827; display: block; }
+.history-date { font-size: 0.6875rem; color: #78716c; }
+.history-pts { font-size: 0.8125rem; font-weight: 600; color: var(--color-primary); }
 
-.empty-state { color: #78716c; font-size: 0.9375rem; text-align: center; padding: 2rem; background: white; border-radius: 1rem; border: 1px solid #e7e5e4; }
+.empty-state { color: #78716c; font-size: 0.875rem; text-align: center; padding: 1.75rem; }
 </style>

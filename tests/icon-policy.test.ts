@@ -19,9 +19,9 @@ describe('Font Awesome icon policy', () => {
 
     for (const file of sourceFiles) {
       const source = readFileSync(file, 'utf8')
-      expect(source, file).not.toMatch(emojiPattern)
-      expect(source, file).not.toMatch(/@lucide\/vue|lucide-vue-next/)
-      expect(source, file).not.toMatch(/<svg\b/i)
+      expect(source).not.toMatch(emojiPattern)
+      expect(source).not.toMatch(/@lucide\/vue|lucide-vue-next/)
+      expect(source).not.toMatch(/<svg\b/i)
     }
   })
 })

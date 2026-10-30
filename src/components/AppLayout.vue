@@ -63,30 +63,31 @@ const pageTitle = computed(() => {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(250, 250, 249, 0.9);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid #e7e5e4;
-  padding: 1rem 1.5rem;
+  background: rgba(250, 250, 249, 0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.875rem 1.5rem;
 }
 
 .page-header h1 {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1c1917;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  letter-spacing: -0.01em;
 }
 
 .page-body {
   flex: 1;
-  padding: 1.5rem;
+  padding: 1.25rem;
   padding-bottom: 5rem;
 }
 
 @media (min-width: 768px) {
   .page-body {
     padding-bottom: 1.5rem;
-    padding-left: 2rem;
-    padding-right: 2rem;
+    padding-left: 1.75rem;
+    padding-right: 1.75rem;
     max-width: 760px;
   }
 }
@@ -96,7 +97,7 @@ const pageTitle = computed(() => {
     margin-left: 260px;
   }
   .page-body {
-    padding: 2rem;
+    padding: 1.75rem 2rem;
     max-width: 720px;
   }
 }

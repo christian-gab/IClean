@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios'
+import { storage } from '@/utils/storage'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'
 
@@ -13,19 +14,13 @@ export const httpClient = axios.create({
 httpClient.interceptors.request.use(
   (config) => {
     try {
-      const raw =
-        localStorage.getItem('iclean:auth') ||
-        localStorage.getItem('ecosocial:auth') ||
-        localStorage.getItem('auth')
+      const parsed = storage.get<{ token?: string; user?: { id?: string } }>('auth', {})
 
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        if (parsed?.token) {
-          config.headers.Authorization = `Bearer ${parsed.token}`
-        }
-        if (parsed?.user?.id) {
-          config.headers['x-user-id'] = parsed.user.id
-        }
+      if (parsed?.token) {
+        config.headers.Authorization = `Bearer ${parsed.token}`
+      }
+      if (parsed?.user?.id) {
+        config.headers['x-user-id'] = parsed.user.id
       }
     } catch (e) {
       console.warn('Erro ao ler credenciais do localStorage:', e)
@@ -38,6 +33,11 @@ httpClient.interceptors.request.use(
 httpClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError<{ message?: string; errors?: Array<{ message: string }> }>) => {
+    if (error.response?.status === 401) {
+      storage.remove('auth')
+      storage.clearAll()
+    }
+
     const message =
       error.response?.data?.message ||
       error.response?.data?.errors?.[0]?.message ||

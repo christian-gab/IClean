@@ -82,7 +82,7 @@ function retry() {
   <Teleport to="body">
     <div class="overlay" @click.self="emit('close')" role="dialog" aria-modal="true">
       <Transition name="scale">
-        <div class="modal">
+        <div class="modal card-ds">
 
           <div class="modal-header">
             <div class="header-title">
@@ -101,9 +101,9 @@ function retry() {
 
           <div v-if="step === 'upload'" class="modal-body">
             <p class="step-desc">
-              Para garantir a autenticidade das acoes e evitar pontos indevidos,
-              <strong>envie uma foto comprovando que realizou a acao.</strong>
-              A descricao e opcional.
+              Para garantir a autenticidade das ações e evitar pontos indevidos,
+              <strong>envie uma foto comprovando que realizou a ação.</strong>
+              A descrição é opcional.
             </p>
 
             <div
@@ -111,18 +111,18 @@ function retry() {
               :class="{ 'has-image': imagePreview }"
               @click="!imagePreview && pickFile()"
             >
-              <img v-if="imagePreview" :src="imagePreview" alt="Foto da acao" class="photo-preview" />
+              <img v-if="imagePreview" :src="imagePreview" alt="Foto da ação" class="photo-preview" />
               <div v-else class="photo-placeholder">
                 <i class="fa-solid fa-camera photo-camera-icon" aria-hidden="true" />
                 <p>Toque para tirar ou enviar uma foto</p>
-                <span class="photo-hint">JPG, PNG, WEBP — max 10 MB</span>
+                <span class="photo-hint">JPG, PNG, WEBP — máx 10 MB</span>
               </div>
               <button v-if="imagePreview" class="remove-photo" @click.stop="removeImage" aria-label="Remover foto">
                 <i class="fa-solid fa-xmark" aria-hidden="true" />
               </button>
             </div>
 
-            <button v-if="!imagePreview" class="upload-btn" @click="pickFile">
+            <button v-if="!imagePreview" class="upload-btn btn-secondary" @click="pickFile">
               <i class="fa-solid fa-upload" aria-hidden="true" /> Escolher arquivo
             </button>
 
@@ -136,13 +136,14 @@ function retry() {
             />
 
             <div class="field">
-              <label class="field-label" for="proof-desc">Descricao (opcional)</label>
+              <label class="field-label label-ds" for="proof-desc">Descrição (opcional)</label>
               <textarea
                 id="proof-desc"
                 v-model="description"
                 class="field-textarea"
+                placeholder="Conte brevemente como foi realizar essa ação..."
                 rows="3"
-                placeholder="Conte um pouco sobre como realizou a acao..."
+                maxlength="300"
               />
             </div>
 
@@ -153,7 +154,8 @@ function retry() {
                 :disabled="!canSubmit"
                 @click="submitForValidation"
               >
-                Enviar para validacao
+                <i class="fa-solid fa-paper-plane" aria-hidden="true" />
+                Validar e ganhar pontos
               </button>
             </div>
           </div>
@@ -162,23 +164,30 @@ function retry() {
             <div class="validate-anim">
               <i class="fa-solid fa-spinner spin-icon" aria-hidden="true" />
             </div>
-            <h3 class="validate-title">Validando sua acao...</h3>
-            <p class="validate-sub">Nossa IA esta analisando a foto para confirmar a acao sustentavel.</p>
+            <h3 class="validate-title">Validando sua comprovação...</h3>
+            <p class="validate-sub">
+              Nossa verificação inteligente está analisando a foto e os dados da ação.
+            </p>
+
             <div class="val-progress-wrap">
               <div class="val-progress-bar">
                 <div class="val-progress-fill" :style="{ width: validationProgress + '%' }" />
               </div>
               <span class="val-progress-pct">{{ Math.round(validationProgress) }}%</span>
             </div>
+
             <ul class="val-steps">
-              <li :class="{ done: validationProgress > 20 }">
-                <i class="fa-solid fa-check" aria-hidden="true" /> Verificando qualidade da imagem
+              <li :class="{ done: validationProgress > 15 }">
+                <i class="fa-solid" :class="validationProgress > 15 ? 'fa-check' : 'fa-circle-notch'" aria-hidden="true" /> Verificando resolução da imagem
               </li>
-              <li :class="{ done: validationProgress > 50 }">
-                <i class="fa-solid fa-check" aria-hidden="true" /> Identificando a acao realizada
+              <li :class="{ done: validationProgress > 45 }">
+                <i class="fa-solid" :class="validationProgress > 45 ? 'fa-check' : 'fa-circle-notch'" aria-hidden="true" /> Identificando elementos da ação
               </li>
-              <li :class="{ done: validationProgress > 80 }">
-                <i class="fa-solid fa-check" aria-hidden="true" /> Confirmando autenticidade
+              <li :class="{ done: validationProgress > 75 }">
+                <i class="fa-solid" :class="validationProgress > 75 ? 'fa-check' : 'fa-circle-notch'" aria-hidden="true" /> Checando duplicidade
+              </li>
+              <li :class="{ done: validationProgress >= 99 }">
+                <i class="fa-solid" :class="validationProgress >= 99 ? 'fa-check' : 'fa-circle-notch'" aria-hidden="true" /> Atribuindo pontuação
               </li>
             </ul>
           </div>
@@ -187,13 +196,13 @@ function retry() {
             <div class="result-icon approved-icon">
               <i class="fa-solid fa-circle-check" aria-hidden="true" />
             </div>
-            <h3 class="result-title">Acao Validada!</h3>
+            <h3 class="result-title">Ação validada com sucesso!</h3>
             <p class="result-sub">
-              Sua foto foi analisada e a acao foi confirmada como autentica.
-              Voce ganhou <strong>+{{ actionPoints }} pontos</strong>!
+              Parabéns! Sua ação foi confirmada e você ganhou
+              <strong>+{{ actionPoints }} pontos</strong>.
             </p>
             <button class="btn-primary collect-btn" @click="collectPoints">
-              <i class="fa-solid fa-star" aria-hidden="true" /> Coletar +{{ actionPoints }} pts
+              <i class="fa-solid fa-trophy" aria-hidden="true" /> Resgatar meus pontos
             </button>
           </div>
 
@@ -201,22 +210,23 @@ function retry() {
             <div class="result-icon rejected-icon">
               <i class="fa-solid fa-circle-xmark" aria-hidden="true" />
             </div>
-            <h3 class="result-title">Nao foi possivel validar</h3>
+            <h3 class="result-title">Não foi possível validar</h3>
             <p class="result-sub">
-              Nao conseguimos confirmar a acao com a foto enviada.
-              Certifique-se de que a foto mostra claramente a acao realizada e tente novamente.
+              A imagem enviada não parece comprovar a realização desta ação específica.
             </p>
             <div class="rejected-tips">
-              <p><strong>Dicas:</strong></p>
+              <p>Dicas para aprovação:</p>
               <ul>
-                <li>A foto deve mostrar a acao claramente</li>
-                <li>Evite fotos muito escuras ou borradas</li>
-                <li>Certifique-se de que o contexto esta visivel</li>
+                <li>Envie uma foto nítida e bem iluminada</li>
+                <li>Mostre claramente a ação sendo realizada</li>
+                <li>Evite capturas de tela ou fotos de internet</li>
               </ul>
             </div>
             <div class="result-actions">
-              <button class="btn-secondary" @click="emit('close')">Fechar</button>
-              <button class="btn-primary" @click="retry">Tentar novamente</button>
+              <button class="btn-secondary" @click="emit('close')">Cancelar</button>
+              <button class="btn-primary" @click="retry">
+                <i class="fa-solid fa-arrow-rotate-left" aria-hidden="true" /> Tentar novamente
+              </button>
             </div>
           </div>
 
@@ -229,55 +239,60 @@ function retry() {
 <style scoped>
 .overlay {
   position: fixed; inset: 0;
-  background: rgba(0,0,0,.45);
+  background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(4px);
   display: flex; align-items: center; justify-content: center;
-  z-index: 200; padding: 1rem;
+  z-index: 100; padding: 1rem;
 }
 
 .modal {
   background: white;
-  border-radius: 1.25rem;
-  width: 100%; max-width: 480px;
+  border-radius: var(--radius);
+  width: 100%; max-width: 520px;
   max-height: 90dvh;
   overflow-y: auto;
-  box-shadow: 0 24px 64px rgba(0,0,0,.22);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
 }
 
 .modal-header {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #e7e5e4;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-border);
   gap: 0.75rem;
 }
+
 .header-title {
-  display: flex; align-items: center; gap: 0.75rem;
+  display: flex; align-items: center; gap: 0.625rem;
 }
-.action-icon { color: #16a34a; font-size: 2rem; line-height: 1; flex-shrink: 0; }
+
+.action-icon { color: var(--color-primary); font-size: 1.5rem; line-height: 1; flex-shrink: 0; }
+
 .header-title h2 {
-  margin: 0 0 0.25rem;
-  font-size: 1rem; font-weight: 700; color: #1c1917;
+  margin: 0 0 0.125rem;
+  font-size: 0.9375rem; font-weight: 600; color: #111827;
   line-height: 1.3;
 }
+
 .points-chip {
   display: inline-flex; align-items: center; gap: 0.25rem;
-  font-size: 0.8125rem; font-weight: 700; color: #16a34a;
-  background: #f0fdf4; padding: 0.125rem 0.5rem;
-  border-radius: 9999px; border: 1px solid #bbf7d0;
+  font-size: 0.75rem; font-weight: 600; color: var(--color-primary);
+  background: #f0fdf4; padding: 0.1rem 0.375rem;
+  border-radius: var(--radius); border: 1px solid #bbf7d0;
 }
+
 .icon-btn { padding: 0.375rem; flex-shrink: 0; }
 
-.modal-body { padding: 1.375rem 1.5rem; display: flex; flex-direction: column; gap: 1.125rem; }
+.modal-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 0.875rem; }
 
 .step-desc {
-  margin: 0; font-size: 0.9rem; color: #57534e; line-height: 1.6;
+  margin: 0; font-size: 0.8125rem; color: #57534e; line-height: 1.5;
 }
-.step-desc strong { color: #1c1917; }
+.step-desc strong { color: #111827; }
 
 .photo-zone {
-  border: 2px dashed #d6d3d1;
-  border-radius: 1rem;
-  min-height: 160px;
+  border: 1.5px dashed #d6d3d1;
+  border-radius: var(--radius);
+  min-height: 140px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
@@ -285,122 +300,109 @@ function retry() {
   overflow: hidden;
 }
 .photo-zone:hover:not(.has-image) {
-  border-color: #86efac;
+  border-color: var(--color-primary);
   background: #f0fdf4;
 }
-.photo-zone.has-image { cursor: default; border-style: solid; border-color: #bbf7d0; }
+.photo-zone.has-image { cursor: default; border-style: solid; border-color: var(--color-border); }
 
 .photo-placeholder {
-  display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
-  padding: 2rem 1rem; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 0.375rem;
+  padding: 1.5rem 1rem; text-align: center;
 }
-.photo-camera-icon { color: #a8a29e; font-size: 2rem; }
-.photo-placeholder p { margin: 0; font-size: 0.9375rem; color: #78716c; font-weight: 500; }
-.photo-hint { font-size: 0.75rem; color: #a8a29e; }
+.photo-camera-icon { color: #a8a29e; font-size: 1.5rem; }
+.photo-placeholder p { margin: 0; font-size: 0.8125rem; color: #57534e; font-weight: 500; }
+.photo-hint { font-size: 0.6875rem; color: #78716c; }
 
 .photo-preview {
-  width: 100%; max-height: 240px;
+  width: 100%; max-height: 220px;
   object-fit: cover; display: block;
 }
 
 .remove-photo {
   position: absolute; top: 8px; right: 8px;
-  background: rgba(0,0,0,.55); color: white;
-  border: none; border-radius: 9999px;
-  width: 26px; height: 26px;
+  background: rgba(0, 0, 0, 0.65); color: white;
+  border: none; border-radius: var(--radius);
+  width: 24px; height: 24px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: background 0.15s;
 }
-.remove-photo:hover { background: #dc2626; }
+.remove-photo:hover { background: var(--color-destructive); }
 
-.upload-btn {
-  display: inline-flex; align-items: center; gap: 0.5rem;
-  padding: 0.5rem 1rem; background: #f5f5f4; color: #44403c;
-  border: 1.5px solid #d6d3d1; border-radius: 0.625rem;
-  font-size: 0.875rem; font-weight: 500;
-  cursor: pointer; transition: all 0.15s; font-family: inherit;
-  align-self: flex-start;
-}
-.upload-btn:hover { background: #e7e5e4; border-color: #a8a29e; }
+.upload-btn { align-self: flex-start; font-size: 0.8125rem; }
 
-.field { display: flex; flex-direction: column; gap: 0.375rem; }
-.field-label { font-size: 0.8125rem; font-weight: 600; color: #57534e; }
+.field { display: flex; flex-direction: column; gap: 0.25rem; }
+
 .field-textarea {
-  padding: 0.625rem 0.75rem;
-  border: 1.5px solid #e7e5e4; border-radius: 0.625rem;
-  font-size: 0.875rem; color: #1c1917; background: #fafaf9;
-  resize: vertical; min-height: 72px; font-family: inherit;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border); border-radius: var(--radius);
+  font-size: 0.8125rem; color: #111827; background: white;
+  resize: vertical; min-height: 64px; font-family: inherit;
   outline: none; transition: border-color 0.15s, box-shadow 0.15s;
 }
 .field-textarea:focus {
-  border-color: #16a34a;
-  box-shadow: 0 0 0 3px rgba(22,163,74,.1);
-  background: white;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
 }
 
 .modal-footer {
-  display: flex; justify-content: flex-end; gap: 0.75rem;
+  display: flex; justify-content: flex-end; gap: 0.625rem;
   padding-top: 0.25rem;
 }
-.submit-btn:disabled { opacity: .45; cursor: not-allowed; }
 
-.validating-body { align-items: center; text-align: center; padding: 2rem 1.5rem; }
+.validating-body { align-items: center; text-align: center; padding: 2rem 1.25rem; }
 .validate-anim { margin-bottom: 0.5rem; }
-.spin-icon { color: #16a34a; font-size: 2.5rem; animation: spin 1s linear infinite; }
+.spin-icon { color: var(--color-primary); font-size: 2rem; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.validate-title { margin: 0 0 0.375rem; font-size: 1.125rem; font-weight: 700; color: #1c1917; }
-.validate-sub { margin: 0; font-size: 0.9rem; color: #78716c; line-height: 1.5; }
+.validate-title { margin: 0 0 0.25rem; font-size: 1rem; font-weight: 600; color: #111827; }
+.validate-sub { margin: 0; font-size: 0.8125rem; color: #78716c; line-height: 1.5; }
 
 .val-progress-wrap {
   display: flex; align-items: center; gap: 0.75rem;
   width: 100%; margin-top: 0.75rem;
 }
 .val-progress-bar {
-  flex: 1; height: 8px; background: #e7e5e4; border-radius: 9999px; overflow: hidden;
+  flex: 1; height: 6px; background: #e7e5e4; border-radius: var(--radius); overflow: hidden;
 }
 .val-progress-fill {
-  height: 100%; background: linear-gradient(90deg, #22c55e, #4ade80);
-  border-radius: 9999px;
+  height: 100%; background: var(--color-primary);
+  border-radius: var(--radius);
   transition: width 0.2s ease;
 }
-.val-progress-pct { font-size: 0.8125rem; font-weight: 600; color: #16a34a; min-width: 36px; text-align: right; }
+.val-progress-pct { font-size: 0.75rem; font-weight: 600; color: var(--color-primary); min-width: 32px; text-align: right; }
 
 .val-steps {
   list-style: none; margin: 0.5rem 0 0; padding: 0;
-  display: flex; flex-direction: column; gap: 0.375rem;
+  display: flex; flex-direction: column; gap: 0.25rem;
   width: 100%; text-align: left;
 }
 .val-steps li {
-  font-size: 0.8125rem; color: #d6d3d1;
-  transition: color 0.3s;
-  padding: 0.25rem 0;
+  font-size: 0.75rem; color: #a8a29e;
+  transition: color 0.2s;
+  padding: 0.2rem 0;
 }
-.val-steps li.done { color: #16a34a; font-weight: 500; }
+.val-steps li.done { color: var(--color-primary); font-weight: 500; }
 
-.result-body { align-items: center; text-align: center; padding: 2rem 1.5rem; }
-.result-icon { margin-bottom: 0.75rem; font-size: 3rem; }
-.approved-icon { color: #16a34a; }
-.rejected-icon { color: #dc2626; }
-.approved-icon { animation: pop 0.4s cubic-bezier(0.34,1.56,0.64,1); }
-.rejected-icon { animation: pop 0.4s cubic-bezier(0.34,1.56,0.64,1); }
-@keyframes pop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.result-body { align-items: center; text-align: center; padding: 2rem 1.25rem; }
+.result-icon { margin-bottom: 0.5rem; font-size: 2.5rem; }
+.approved-icon { color: var(--color-primary); }
+.rejected-icon { color: var(--color-destructive); }
 
-.result-title { margin: 0 0 0.5rem; font-size: 1.25rem; font-weight: 800; color: #1c1917; }
-.result-sub { margin: 0; font-size: 0.9375rem; color: #57534e; line-height: 1.6; max-width: 320px; }
-.result-sub strong { color: #16a34a; }
+.result-title { margin: 0 0 0.375rem; font-size: 1.125rem; font-weight: 600; color: #111827; }
+.result-sub { margin: 0; font-size: 0.8125rem; color: #57534e; line-height: 1.5; max-width: 320px; }
+.result-sub strong { color: var(--color-primary); }
 
-.collect-btn { margin-top: 0.5rem; font-size: 1rem; padding: 0.75rem 1.75rem; }
+.collect-btn { margin-top: 0.5rem; font-size: 0.875rem; }
 
 .rejected-tips {
   background: #fef2f2; border: 1px solid #fecaca;
-  border-radius: 0.75rem; padding: 1rem;
+  border-radius: var(--radius); padding: 0.75rem 1rem;
   text-align: left; width: 100%; max-width: 320px;
   margin-top: 0.25rem;
 }
-.rejected-tips p { margin: 0 0 0.375rem; font-size: 0.875rem; font-weight: 600; color: #dc2626; }
+.rejected-tips p { margin: 0 0 0.25rem; font-size: 0.8125rem; font-weight: 600; color: var(--color-destructive); }
 .rejected-tips ul { margin: 0; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.25rem; }
-.rejected-tips li { font-size: 0.8125rem; color: #78716c; }
+.rejected-tips li { font-size: 0.75rem; color: #78716c; }
 
-.result-actions { display: flex; gap: 0.75rem; margin-top: 0.25rem; }
+.result-actions { display: flex; gap: 0.625rem; margin-top: 0.25rem; }
 </style>

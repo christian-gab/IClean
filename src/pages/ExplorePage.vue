@@ -60,11 +60,11 @@ onMounted(() => {
   <div class="explore-page">
     <div class="explore-header">
       <p class="explore-desc">
-        Escolha acoes sustentaveis para realizar e ganhe pontos. Cada pequena acao faz diferenca!
+        Escolha ações sustentáveis para realizar e ganhe pontos. Cada pequena ação faz diferença!
       </p>
       <div class="validation-notice">
-        <i class="fa-solid fa-shield-halved" style="color:#16a34a" aria-hidden="true" />
-        <span>Todas as acoes passam por validacao com foto para garantir autenticidade.</span>
+        <i class="fa-solid fa-shield-halved" style="color:var(--color-primary)" aria-hidden="true" />
+        <span>Todas as ações passam por validação com foto para garantir autenticidade.</span>
       </div>
     </div>
 
@@ -82,7 +82,7 @@ onMounted(() => {
     </div>
 
     <div v-if="actionStore.isLoading" class="loading-state">
-      <i class="fa-solid fa-spinner spin" style="color:#16a34a" aria-hidden="true" />
+      <i class="fa-solid fa-spinner spin" style="color:var(--color-primary)" aria-hidden="true" />
       <p>Carregando ações sustentáveis...</p>
     </div>
 
@@ -90,10 +90,10 @@ onMounted(() => {
       <div
         v-for="action in filteredActions"
         :key="action.id"
-        class="eco-card action-card"
+        class="card-ds action-card"
         :class="{ completed: isCompleted(action.id) }"
       >
-        <div class="action-icon" :style="{ background: CATEGORY_COLORS[action.category] + '18', color: CATEGORY_COLORS[action.category] }">
+        <div class="action-icon" :style="{ background: CATEGORY_COLORS[action.category] + '15', color: CATEGORY_COLORS[action.category] }">
           <i class="fa-solid" :class="getFontAwesomeIcon(action.icon)" aria-hidden="true" />
         </div>
 
@@ -107,7 +107,7 @@ onMounted(() => {
             <button
               v-if="!isCompleted(action.id)"
               class="btn-primary"
-              style="font-size:0.8125rem;padding:0.375rem 1rem"
+              style="font-size:0.75rem;padding:0.35rem 0.875rem"
               @click="openProof(action)"
               :id="`complete-${action.id}`"
             >
@@ -139,30 +139,30 @@ onMounted(() => {
 .explore-page { max-width: 720px; margin: 0 auto; }
 
 .explore-desc {
-  color: #57534e; font-size: 0.9375rem; line-height: 1.6; margin: 0 0 0.75rem;
+  color: #57534e; font-size: 0.875rem; line-height: 1.6; margin: 0 0 0.75rem;
 }
 
 .validation-notice {
   display: flex; align-items: center; gap: 0.5rem;
   background: #f0fdf4; border: 1px solid #bbf7d0;
-  border-radius: 0.625rem; padding: 0.5rem 0.875rem;
-  font-size: 0.8125rem; color: #15803d; font-weight: 500;
+  border-radius: var(--radius); padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem; color: var(--color-primary); font-weight: 500;
   margin-bottom: 1.25rem;
 }
 
 .chip {
-  padding: 0.375rem 0.875rem; border-radius: 9999px;
-  border: 1.5px solid #e7e5e4; background: white;
-  font-size: 0.8125rem; font-weight: 500; color: #78716c;
+  padding: 0.3125rem 0.75rem; border-radius: var(--radius);
+  border: 1px solid var(--color-border); background: white;
+  font-size: 0.75rem; font-weight: 500; color: #57534e;
   cursor: pointer; transition: all 0.15s ease;
 }
 
-.chip:hover { border-color: #86efac; color: #16a34a; }
-.chip.active { background: #dcfce7; border-color: #86efac; color: #15803d; font-weight: 600; }
+.chip:hover { border-color: #a8a29e; color: #1c1917; }
+.chip.active { background: var(--color-primary); border-color: var(--color-primary); color: white; font-weight: 500; }
 
 .loading-state {
   text-align: center; padding: 3rem 1rem;
-  color: #78716c; font-size: 0.9375rem;
+  color: #78716c; font-size: 0.875rem;
   display: flex; flex-direction: column; align-items: center; gap: 0.75rem;
 }
 
@@ -172,7 +172,7 @@ onMounted(() => {
 .actions-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0.875rem;
+  gap: 0.75rem;
 }
 
 @media (min-width: 600px) {
@@ -180,40 +180,40 @@ onMounted(() => {
 }
 
 .action-card {
-  display: flex; gap: 1rem; padding: 1.125rem;
-  transition: all 0.2s ease;
+  display: flex; gap: 0.875rem; padding: 1rem;
+  transition: all 0.15s ease;
 }
 
 .action-card.completed {
-  opacity: 0.6;
+  opacity: 0.65;
   border-color: #bbf7d0;
   background: #f0fdf4;
 }
 
 .action-icon {
-  width: 48px; height: 48px; border-radius: 0.75rem;
+  width: 42px; height: 42px; border-radius: var(--radius);
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.5rem; flex-shrink: 0;
+  font-size: 1.25rem; flex-shrink: 0;
 }
 
-.action-content { flex: 1; display: flex; flex-direction: column; gap: 0.375rem; }
+.action-content { flex: 1; display: flex; flex-direction: column; gap: 0.3125rem; }
 
-.action-title { margin: 0; font-size: 0.9375rem; font-weight: 600; color: #1c1917; }
-.action-desc { margin: 0; font-size: 0.8125rem; color: #78716c; line-height: 1.5; }
+.action-title { margin: 0; font-size: 0.875rem; font-weight: 600; color: #1c1917; }
+.action-desc { margin: 0; font-size: 0.75rem; color: #78716c; line-height: 1.5; }
 
 .action-footer {
   display: flex; align-items: center; justify-content: space-between;
-  margin-top: 0.5rem;
+  margin-top: 0.375rem;
 }
 
 .points-badge {
   display: flex; align-items: center; gap: 0.25rem;
-  font-size: 0.8125rem; font-weight: 700; color: #16a34a;
+  font-size: 0.75rem; font-weight: 600; color: var(--color-primary);
 }
 
 .done-badge {
   display: flex; align-items: center; gap: 0.25rem;
-  font-size: 0.8125rem; font-weight: 600; color: #16a34a;
-  background: #dcfce7; padding: 0.25rem 0.625rem; border-radius: 9999px;
+  font-size: 0.75rem; font-weight: 500; color: var(--color-primary);
+  background: #dcfce7; padding: 0.2rem 0.5rem; border-radius: var(--radius);
 }
 </style>

@@ -54,11 +54,11 @@ async function submitPost() {
 
 <template>
   <Teleport to="body">
-    <div class="modal-overlay" @click.self="closeModal" role="dialog" aria-modal="true" aria-label="Criar publicacao">
+    <div class="modal-overlay" @click.self="closeModal" role="dialog" aria-modal="true" aria-label="Criar publicação">
       <Transition name="scale">
-        <div class="modal-box">
+        <div class="modal-box card-ds">
           <div class="modal-header">
-            <h2>Nova Publicacao</h2>
+            <h2>Nova Publicação</h2>
             <button class="btn-ghost" @click="closeModal" id="close-modal" aria-label="Fechar">
               <i class="fa-solid fa-xmark" aria-hidden="true" />
             </button>
@@ -79,19 +79,19 @@ async function submitPost() {
               @click="showPreview = true"
               id="tab-preview"
             >
-              <i class="fa-solid fa-eye" aria-hidden="true" /> Pre-visualizar
+              <i class="fa-solid fa-eye" aria-hidden="true" /> Pré-visualizar
             </button>
           </div>
 
           <div v-if="!showPreview" class="modal-form">
             <div class="user-row">
-              <img :src="auth.user?.avatarUrl" :alt="auth.user?.name" class="avatar" width="40" height="40" />
+              <img :src="auth.user?.avatarUrl" :alt="auth.user?.name" class="avatar" width="36" height="36" />
               <span class="user-name">{{ auth.user?.name }}</span>
             </div>
 
             <textarea
               v-model="text"
-              placeholder="Compartilhe uma acao, dica ou experiencia sustentavel..."
+              placeholder="Compartilhe uma ação, dica ou experiência sustentável..."
               class="post-textarea"
               id="post-text"
               maxlength="1000"
@@ -100,14 +100,14 @@ async function submitPost() {
             <div class="char-count">{{ text.length }}/1000</div>
 
             <div class="form-row">
-              <label class="form-label">Categoria</label>
+              <label class="form-label label-ds">Categoria</label>
               <select v-model="category" class="form-select" id="post-category">
                 <option v-for="[val, label] in categories" :key="val" :value="val">{{ label }}</option>
               </select>
             </div>
 
             <div class="form-row">
-              <label class="form-label">
+              <label class="form-label label-ds">
                 <i class="fa-solid fa-image" aria-hidden="true" /> URL de imagem (opcional)
               </label>
               <input
@@ -121,9 +121,9 @@ async function submitPost() {
           </div>
 
           <div v-else class="modal-preview">
-            <div class="preview-card">
+            <div class="preview-card card-ds">
               <div class="post-header">
-                <img :src="auth.user?.avatarUrl" :alt="auth.user?.name" class="avatar" width="40" height="40" />
+                <img :src="auth.user?.avatarUrl" :alt="auth.user?.name" class="avatar" width="36" height="36" />
                 <div>
                   <div class="author-name">{{ auth.user?.name }}</div>
                   <div class="post-time">agora mesmo</div>
@@ -155,7 +155,7 @@ async function submitPost() {
 <style scoped>
 .modal-overlay {
   position: fixed; inset: 0;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(4px);
   display: flex; align-items: center; justify-content: center;
   z-index: 100; padding: 1rem;
@@ -163,88 +163,93 @@ async function submitPost() {
 
 .modal-box {
   background: white;
-  border-radius: 1.25rem;
-  width: 100%; max-width: 560px;
+  border-radius: var(--radius);
+  width: 100%; max-width: 540px;
   max-height: 90dvh;
   overflow-y: auto;
-  box-shadow: 0 24px 48px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
 }
 
 .modal-header {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #e7e5e4;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .modal-header h2 {
-  margin: 0; font-size: 1.0625rem; font-weight: 700; color: #1c1917;
+  margin: 0; font-size: 1rem; font-weight: 600; color: #111827;
 }
 
 .modal-tabs {
-  display: flex; gap: 0; padding: 0.75rem 1.5rem 0;
+  display: flex; gap: 0; padding: 0.5rem 1.25rem 0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .tab-btn {
   display: flex; align-items: center; gap: 0.375rem;
-  padding: 0.5rem 1rem; background: none; border: none;
+  padding: 0.5rem 0.875rem; background: none; border: none;
   border-bottom: 2px solid transparent;
-  font-size: 0.875rem; font-weight: 500; color: #a8a29e;
+  font-size: 0.8125rem; font-weight: 500; color: #78716c;
   cursor: pointer; transition: all 0.15s ease;
 }
 
-.tab-btn.active { color: #16a34a; border-bottom-color: #16a34a; }
+.tab-btn.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
 
 .modal-form, .modal-preview {
-  padding: 1.25rem 1.5rem;
-  display: flex; flex-direction: column; gap: 1rem;
+  padding: 1.25rem;
+  display: flex; flex-direction: column; gap: 0.875rem;
 }
 
 .user-row {
-  display: flex; align-items: center; gap: 0.75rem;
+  display: flex; align-items: center; gap: 0.625rem;
 }
 
-.user-name { font-weight: 600; font-size: 0.9375rem; color: #1c1917; }
+.user-name { font-weight: 600; font-size: 0.875rem; color: #111827; }
 
 .post-textarea {
   width: 100%; resize: vertical;
-  padding: 0.75rem; border: 1.5px solid #e7e5e4;
-  border-radius: 0.75rem; font-size: 0.9375rem;
-  color: #1c1917; line-height: 1.6; background: #fafaf9;
-  transition: border-color 0.15s ease;
+  padding: 0.625rem 0.75rem; border: 1px solid var(--color-border);
+  border-radius: var(--radius); font-size: 0.875rem;
+  color: #111827; line-height: 1.5; background: white;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.post-textarea:focus { border-color: #22c55e; background: white; }
+.post-textarea:focus { border-color: var(--color-primary); box-shadow: 0 0 0 1px var(--color-primary); }
 
-.char-count { font-size: 0.75rem; color: #a8a29e; text-align: right; margin-top: -0.5rem; }
+.char-count { font-size: 0.75rem; color: #78716c; text-align: right; margin-top: -0.375rem; }
+
+.form-row { display: flex; flex-direction: column; gap: 0.25rem; }
 
 .form-label {
   display: flex; align-items: center; gap: 0.375rem;
-  font-size: 0.8125rem; font-weight: 600; color: #57534e; margin-bottom: 0.375rem;
+  margin-bottom: 0.125rem;
 }
 
 .form-select, .form-input {
   width: 100%; padding: 0.5rem 0.75rem;
-  border: 1.5px solid #e7e5e4; border-radius: 0.625rem;
-  font-size: 0.875rem; color: #1c1917; background: #fafaf9;
-  transition: border-color 0.15s ease;
+  border: 1px solid var(--color-border); border-radius: var(--radius);
+  font-size: 0.875rem; color: #111827; background: white;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.form-select:focus, .form-input:focus { border-color: #22c55e; background: white; }
+.form-select:focus, .form-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 1px var(--color-primary); }
 
 .preview-card {
-  background: #f5f5f4; border-radius: 0.75rem; padding: 1rem;
+  padding: 0.875rem 1rem;
 }
 
-.post-header { display: flex; gap: 0.75rem; align-items: center; margin-bottom: 0.75rem; }
-.author-name { font-size: 0.9375rem; font-weight: 600; color: #1c1917; }
-.post-time { font-size: 0.75rem; color: #a8a29e; }
-.preview-text { margin: 0; font-size: 0.9375rem; line-height: 1.6; color: #292524; }
-.preview-empty { margin: 0; color: #a8a29e; font-style: italic; font-size: 0.875rem; }
-.preview-image { width: 100%; border-radius: 0.5rem; margin-top: 0.75rem; object-fit: cover; max-height: 280px; }
+.post-header { display: flex; gap: 0.625rem; align-items: center; margin-bottom: 0.625rem; }
+.author-name { font-size: 0.875rem; font-weight: 600; color: #111827; }
+.post-time { font-size: 0.75rem; color: #78716c; }
+.preview-text { margin: 0; font-size: 0.875rem; line-height: 1.5; color: #292524; }
+.preview-empty { margin: 0; color: #78716c; font-style: italic; font-size: 0.8125rem; }
+.preview-image { width: 100%; border-radius: var(--radius); margin-top: 0.625rem; object-fit: cover; max-height: 260px; border: 1px solid var(--color-border); }
 
 .modal-footer {
-  display: flex; justify-content: flex-end; gap: 0.75rem;
-  padding: 1rem 1.5rem;
-  border-top: 1px solid #e7e5e4;
+  display: flex; justify-content: flex-end; gap: 0.625rem;
+  padding: 0.875rem 1.25rem;
+  border-top: 1px solid var(--color-border);
 }
 </style>

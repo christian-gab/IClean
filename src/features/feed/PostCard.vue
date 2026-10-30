@@ -72,14 +72,14 @@ async function share() {
 </script>
 
 <template>
-  <article class="eco-card post-card">
+  <article class="card-ds post-card">
     <div class="post-header">
-      <img :src="authorAvatarUrl" :alt="authorName" class="avatar" width="40" height="40" />
+      <img :src="authorAvatarUrl" :alt="authorName" class="avatar" width="38" height="38" />
       <div class="post-meta">
         <span class="author-name">{{ authorName }}</span>
         <span class="post-time">{{ timeAgo(post.createdAt) }}</span>
       </div>
-      <span class="category-badge" :style="{ background: categoryColor + '18', color: categoryColor }">
+      <span class="category-badge" :style="{ background: categoryColor + '15', color: categoryColor }">
         {{ categoryLabel }}
       </span>
     </div>
@@ -99,7 +99,7 @@ async function share() {
         <span>{{ post.likes }}</span>
       </button>
 
-      <button class="action-btn" @click="toggleComments" :id="`comments-${post.id}`" :aria-label="'Ver comentarios'">
+      <button class="action-btn" @click="toggleComments" :id="`comments-${post.id}`" :aria-label="'Ver comentários'">
         <i class="fa-solid fa-comment" aria-hidden="true" />
         <span>{{ post.comments.length }}</span>
         <i v-if="showComments" class="fa-solid fa-chevron-up" aria-hidden="true" />
@@ -128,7 +128,7 @@ async function share() {
           <input
             v-model="commentText"
             type="text"
-            placeholder="Adicione um comentario..."
+            placeholder="Adicione um comentário..."
             class="comment-input"
             :id="`comment-input-${post.id}`"
             @keydown.enter="submitComment"
@@ -136,7 +136,7 @@ async function share() {
           />
           <button
             class="btn-primary"
-            style="padding:0.4rem 0.8rem;font-size:0.8rem"
+            style="padding: 0.45rem 0.8rem; font-size: 0.8125rem"
             :disabled="!commentText.trim() || isSubmitting"
             @click="submitComment"
             :id="`comment-submit-${post.id}`"
@@ -150,13 +150,13 @@ async function share() {
 </template>
 
 <style scoped>
-.post-card { padding: 1.25rem; margin-bottom: 1rem; }
+.post-card { padding: 1.125rem 1.25rem; margin-bottom: 0.875rem; }
 
 .post-header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 0.875rem;
+  margin-bottom: 0.75rem;
 }
 
 .post-meta {
@@ -167,75 +167,77 @@ async function share() {
 }
 
 .author-name {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: #1c1917;
 }
 
 .post-time {
   font-size: 0.75rem;
-  color: #a8a29e;
+  color: #78716c;
 }
 
 .category-badge {
-  font-size: 0.6875rem;
+  font-size: 11px;
   font-weight: 600;
-  padding: 0.25rem 0.625rem;
-  border-radius: 9999px;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius);
   white-space: nowrap;
+  letter-spacing: 0.02em;
 }
 
 .post-text {
-  margin: 0 0 1rem;
-  font-size: 0.9375rem;
+  margin: 0 0 0.875rem;
+  font-size: 0.875rem;
   line-height: 1.6;
   color: #292524;
 }
 
 .post-image {
   width: 100%;
-  border-radius: 0.75rem;
-  margin-bottom: 1rem;
+  border-radius: var(--radius);
+  margin-bottom: 0.875rem;
   object-fit: cover;
   max-height: 400px;
+  border: 1px solid var(--color-border);
 }
 
 .post-actions {
   display: flex;
   gap: 0.25rem;
-  border-top: 1px solid #f5f5f4;
-  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+  padding-top: 0.625rem;
 }
 
 .action-btn {
   display: flex;
   align-items: center;
   gap: 0.375rem;
-  padding: 0.375rem 0.75rem;
+  padding: 0.375rem 0.625rem;
   background: none;
   border: none;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
+  border-radius: var(--radius);
+  font-size: 0.8125rem;
   font-weight: 500;
   color: #78716c;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.action-btn:hover { background: #f5f5f4; color: #44403c; }
-.action-btn.liked { color: #ef4444; }
-.action-btn.liked:hover { background: #fff1f2; }
+.action-btn:hover { background: #f5f5f4; color: #1c1917; }
+.action-btn.liked { color: #dc2626; }
+.action-btn.liked:hover { background: #fef2f2; }
 
 .comments-section {
-  margin-top: 1rem;
+  margin-top: 0.75rem;
   padding-top: 0.75rem;
-  border-top: 1px solid #f5f5f4;
+  border-top: 1px solid var(--color-border);
 }
 
 .comments-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.625rem;
   margin-bottom: 0.75rem;
 }
 
@@ -247,13 +249,14 @@ async function share() {
 
 .comment-bubble {
   background: #f5f5f4;
-  border-radius: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
   padding: 0.5rem 0.75rem;
   flex: 1;
 }
 
 .comment-author {
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #1c1917;
   display: block;
@@ -262,17 +265,17 @@ async function share() {
 
 .comment-text {
   margin: 0;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   color: #44403c;
   line-height: 1.5;
 }
 
 .no-comments {
-  font-size: 0.875rem;
-  color: #a8a29e;
+  font-size: 0.8125rem;
+  color: #78716c;
   text-align: center;
   padding: 0.5rem;
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.625rem;
 }
 
 .comment-input-row {
@@ -283,17 +286,18 @@ async function share() {
 
 .comment-input {
   flex: 1;
-  padding: 0.5rem 0.75rem;
-  border: 1.5px solid #e7e5e4;
-  border-radius: 9999px;
-  font-size: 0.875rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 0.8125rem;
   color: #1c1917;
-  background: #fafaf9;
-  transition: border-color 0.15s ease;
+  background: white;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .comment-input:focus {
-  border-color: #22c55e;
-  background: white;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
 }
 </style>

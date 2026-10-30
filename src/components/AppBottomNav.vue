@@ -33,7 +33,7 @@ const navItems = [
   left: 0;
   right: 0;
   background: white;
-  border-top: 1px solid #e7e5e4;
+  border-top: 1px solid var(--color-border);
   display: flex;
   z-index: 30;
   padding-bottom: env(safe-area-inset-bottom);
@@ -47,16 +47,17 @@ const navItems = [
   gap: 0.25rem;
   padding: 0.625rem 0.5rem;
   text-decoration: none;
-  color: #a8a29e;
+  color: #78716c;
   font-size: 0.6875rem;
   font-weight: 500;
   transition: color 0.15s ease;
 }
 
-.bottom-nav-item i { font-size: 1.375rem; }
+.bottom-nav-item i { font-size: 1.125rem; }
 
 .bottom-nav-item.active {
-  color: #16a34a;
+  color: var(--color-primary);
+  font-weight: 600;
 }
 
 @media (min-width: 1024px) {

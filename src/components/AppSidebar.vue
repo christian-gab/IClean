@@ -41,15 +41,15 @@ function logout() {
       </RouterLink>
     </nav>
 
-    <div class="sidebar-points">
-      <div class="points-label">{{ store.currentLevel.name }}</div>
+    <div class="sidebar-points card-ds">
+      <div class="points-label label-ds">{{ store.currentLevel.name }}</div>
       <div class="points-value">{{ store.progress.totalPoints }} pts</div>
-      <div class="progress-bar" style="margin-top:8px">
+      <div class="progress-bar" style="margin-top: 8px">
         <div class="progress-bar-fill" :style="{ width: store.levelProgress + '%' }" />
       </div>
     </div>
 
-    <div v-if="auth.user" class="sidebar-user">
+    <div v-if="auth.user" class="sidebar-user card-ds">
       <img :src="auth.user.avatarUrl" :alt="auth.user.name" class="avatar sidebar-avatar" width="36" height="36" />
       <div class="sidebar-user-info">
         <span class="sidebar-user-name">{{ auth.user.name }}</span>
@@ -77,7 +77,7 @@ function logout() {
     left: 0;
     height: 100dvh;
     background: white;
-    border-right: 1px solid #e7e5e4;
+    border-right: 1px solid var(--color-border);
     padding: 1.5rem 1rem;
     z-index: 20;
   }
@@ -91,13 +91,13 @@ function logout() {
   margin-bottom: 2rem;
 }
 
-.sidebar-logo-icon { font-size: 1.75rem; color: #16a34a; }
+.sidebar-logo-icon { font-size: 1.5rem; color: var(--color-primary); }
 
 .sidebar-logo span {
   font-size: 1.25rem;
-  font-weight: 800;
-  color: #15803d;
-  letter-spacing: -0.5px;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: -0.3px;
 }
 
 .sidebar-nav {
@@ -111,64 +111,56 @@ function logout() {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem;
-  border-radius: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius);
   text-decoration: none;
-  color: #78716c;
+  color: #57534e;
   font-weight: 500;
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   transition: all 0.15s ease;
+  border-left: 2px solid transparent;
 }
 
-.nav-item i { width: 20px; text-align: center; font-size: 1.25rem; }
+.nav-item i { width: 18px; text-align: center; font-size: 1rem; }
 
 .nav-item:hover {
-  background: #f0fdf4;
-  color: #16a34a;
+  background: #f5f5f4;
+  color: #1c1917;
 }
 
 .nav-item.active {
-  background: #dcfce7;
-  color: #15803d;
+  background: #f0fdf4;
+  color: var(--color-primary);
   font-weight: 600;
+  border-left-color: var(--color-primary);
 }
 
 .sidebar-points {
-  background: #f0fdf4;
-  border-radius: 0.75rem;
-  padding: 1rem;
-  border: 1px solid #bbf7d0;
+  padding: 0.875rem;
   margin-bottom: 0.75rem;
 }
 
 .points-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #16a34a;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: 0.25rem;
 }
 
 .points-value {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 1.125rem;
+  font-weight: 600;
   color: #1c1917;
-  margin-top: 0.25rem;
 }
 
 .sidebar-user {
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  padding: 0.75rem;
-  border-radius: 0.75rem;
-  border: 1px solid #e7e5e4;
-  background: #fafaf9;
+  padding: 0.625rem 0.75rem;
 }
 
 .sidebar-avatar {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   flex-shrink: 0;
 }
 
@@ -180,7 +172,7 @@ function logout() {
 }
 
 .sidebar-user-name {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #1c1917;
   white-space: nowrap;
@@ -189,8 +181,8 @@ function logout() {
 }
 
 .sidebar-user-username {
-  font-size: 0.75rem;
-  color: #a8a29e;
+  font-size: 0.6875rem;
+  color: #78716c;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -203,13 +195,13 @@ function logout() {
   cursor: pointer;
   color: #a8a29e;
   padding: 0.25rem;
-  border-radius: 0.375rem;
+  border-radius: var(--radius);
   display: flex;
   align-items: center;
   transition: color 0.15s, background 0.15s;
 }
 .sidebar-logout:hover {
-  color: #dc2626;
+  color: var(--color-destructive);
   background: #fef2f2;
 }
 </style>

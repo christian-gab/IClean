@@ -15,14 +15,19 @@ interface AuthState {
 
 export const useAuthStore = defineStore('auth', () => {
   const stored = storage.get<AuthState>(STORAGE_KEY, { user: null, token: null, isLoggedIn: false })
+  const hasValidSession = Boolean(stored.isLoggedIn && stored.user && stored.token)
 
-  const user = ref<User | null>(stored.user)
-  const token = ref<string | null>(stored.token)
-  const isLoggedIn = ref<boolean>(stored.isLoggedIn)
+  if (stored.isLoggedIn && !hasValidSession) {
+    storage.remove(STORAGE_KEY)
+  }
+
+  const user = ref<User | null>(hasValidSession ? stored.user : null)
+  const token = ref<string | null>(hasValidSession ? stored.token : null)
+  const isLoggedIn = ref<boolean>(hasValidSession)
   const isLoading = ref<boolean>(false)
   const error = ref<string | null>(null)
 
-  const isAuthenticated = computed(() => isLoggedIn.value && user.value !== null)
+  const isAuthenticated = computed(() => isLoggedIn.value && user.value !== null && !!token.value)
 
   function save() {
     storage.set(STORAGE_KEY, {
@@ -59,14 +64,22 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function fetchMe(): Promise<User | null> {
-    if (!user.value?.id) return null
+    if (!token.value) {
+      logout()
+      return null
+    }
     try {
       const updated = await authService.getMe()
       user.value = updated
       save()
       return updated
-    } catch (err) {
+    } catch (err: unknown) {
       console.warn('Erro ao atualizar dados do usuário autenticado:', err)
+      const msg = err instanceof Error ? err.message.toLowerCase() : ''
+      if (msg.includes('autenticado') || msg.includes('401') || msg.includes('unauthorized') || msg.includes('token')) {
+        logout()
+        return null
+      }
       return user.value
     }
   }
@@ -101,6 +114,7 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
     token.value = null
     isLoggedIn.value = false
+    storage.remove(STORAGE_KEY)
     storage.clearAll()
     try {
       const progressStore = useProgressStore()

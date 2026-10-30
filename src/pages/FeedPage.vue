@@ -27,7 +27,7 @@ onMounted(() => {
 
 <template>
   <div class="feed-page">
-    <div class="create-prompt eco-card" @click="showModal = true" role="button" id="open-create-post">
+    <div class="create-prompt card-ds" @click="showModal = true" role="button" id="open-create-post">
       <img :src="auth.user?.avatarUrl" :alt="auth.user?.name" class="avatar" width="36" height="36" />
       <div class="prompt-placeholder">O que você quer compartilhar hoje?</div>
       <button class="btn-primary" style="flex-shrink:0" @click.stop="showModal = true" id="btn-new-post">
@@ -36,7 +36,7 @@ onMounted(() => {
     </div>
 
     <div class="filter-bar">
-      <i class="fa-solid fa-sliders" style="color:#a8a29e" aria-hidden="true" />
+      <i class="fa-solid fa-sliders" style="color:#78716c; font-size: 0.875rem" aria-hidden="true" />
       <div class="filter-chips">
         <button
           v-for="[val, label] in categories"
@@ -52,7 +52,7 @@ onMounted(() => {
     </div>
 
     <div v-if="feed.isLoading" class="loading-state">
-      <i class="fa-solid fa-spinner spin" style="color:#16a34a" aria-hidden="true" />
+      <i class="fa-solid fa-spinner spin" style="color:var(--color-primary)" aria-hidden="true" />
       <p>Carregando publicações...</p>
     </div>
 
@@ -64,7 +64,7 @@ onMounted(() => {
 
     <div v-else class="empty-state">
       <div class="empty-icon"><i class="fa-solid fa-seedling" aria-hidden="true" /></div>
-      <p>Nenhuma publicacao nessa categoria.</p>
+      <p>Nenhuma publicação nessa categoria.</p>
       <button class="btn-secondary" @click="setFilter('all')" id="clear-filter">Ver todas</button>
     </div>
 
@@ -79,13 +79,14 @@ onMounted(() => {
 
 .create-prompt {
   display: flex; align-items: center; gap: 0.75rem;
-  padding: 1rem 1.25rem; margin-bottom: 1rem; cursor: pointer;
+  padding: 0.875rem 1rem; margin-bottom: 1rem; cursor: pointer;
 }
 
 .prompt-placeholder {
-  flex: 1; color: #a8a29e; font-size: 0.9375rem;
-  background: #f5f5f4; border-radius: 9999px;
-  padding: 0.5rem 1rem;
+  flex: 1; color: #78716c; font-size: 0.875rem;
+  background: #f5f5f4; border-radius: var(--radius);
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--color-border);
 }
 
 .filter-bar {
@@ -96,27 +97,27 @@ onMounted(() => {
 .filter-chips { display: flex; gap: 0.375rem; flex-shrink: 0; }
 
 .chip {
-  padding: 0.375rem 0.875rem; border-radius: 9999px;
-  border: 1.5px solid #e7e5e4; background: white;
-  font-size: 0.8125rem; font-weight: 500; color: #78716c;
+  padding: 0.3125rem 0.75rem; border-radius: var(--radius);
+  border: 1px solid var(--color-border); background: white;
+  font-size: 0.75rem; font-weight: 500; color: #57534e;
   cursor: pointer; transition: all 0.15s ease; white-space: nowrap;
 }
 
-.chip:hover { border-color: #86efac; color: #16a34a; }
-.chip.active { background: #dcfce7; border-color: #86efac; color: #15803d; font-weight: 600; }
+.chip:hover { border-color: #a8a29e; color: #1c1917; }
+.chip.active { background: var(--color-primary); border-color: var(--color-primary); color: white; font-weight: 500; }
 
 .posts-list { display: flex; flex-direction: column; }
 
 .empty-state, .loading-state {
   text-align: center; padding: 3rem 1rem;
-  color: #78716c; font-size: 0.9375rem;
+  color: #78716c; font-size: 0.875rem;
   display: flex; flex-direction: column; align-items: center; gap: 0.75rem;
 }
 
 .spin { animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.empty-icon { font-size: 3rem; }
+.empty-icon { font-size: 2.25rem; color: var(--color-primary); }
 
 @media (max-width: 480px) {
   .create-prompt {
@@ -137,7 +138,7 @@ onMounted(() => {
 
   .create-prompt > .btn-primary {
     gap: 0.375rem;
-    padding: 0.375rem 0.75rem;
+    padding: 0.375rem 0.625rem;
     font-size: 0.8125rem;
   }
 }
