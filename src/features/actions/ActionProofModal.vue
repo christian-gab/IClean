@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, computed } from "vue"
+import { validationService } from "@/services/validation.service"
 
 const props = defineProps<{
   actionId: string
   actionTitle: string
+  actionDescription: string
   actionPoints: number
   actionIcon: string
 }>()
@@ -20,6 +22,9 @@ const imagePreview = ref<string | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 const validationProgress = ref(0)
 const progressInterval = ref<ReturnType<typeof setInterval> | null>(null)
+const validationReasoning = ref("")
+const validationWarnings = ref<string[]>([])
+const validationConfidence = ref(0)
 
 const canSubmit = computed(() => imagePreview.value !== null)
 
@@ -48,19 +53,52 @@ async function submitForValidation() {
   step.value = "validating"
   validationProgress.value = 0
 
+  // Barra de progresso animada enquanto aguarda a IA
   progressInterval.value = setInterval(() => {
-    validationProgress.value = Math.min(validationProgress.value + Math.random() * 8, 95)
-  }, 150)
+    validationProgress.value = Math.min(validationProgress.value + Math.random() * 6, 90)
+  }, 200)
 
-  await new Promise(r => setTimeout(r, 3000 + Math.random() * 1000))
+  try {
+    const result = await validationService.validatePhoto(
+      props.actionId,
+      imagePreview.value!,
+      props.actionTitle,
+      props.actionDescription,
+      description.value || undefined
+    )
 
-  if (progressInterval.value) clearInterval(progressInterval.value)
-  validationProgress.value = 100
+    if (progressInterval.value) clearInterval(progressInterval.value)
+    validationProgress.value = 100
+    await new Promise(r => setTimeout(r, 400))
 
-  await new Promise(r => setTimeout(r, 400))
+    validationReasoning.value = result.reasoning
+    validationWarnings.value = result.warnings
+    validationConfidence.value = result.confidence
+    step.value = result.approved ? "approved" : "rejected"
+  } catch (err) {
+    if (progressInterval.value) clearInterval(progressInterval.value)
+    validationProgress.value = 0
 
-  const approved = Math.random() < 0.9
-  step.value = approved ? "approved" : "rejected"
+    const msg = err instanceof Error ? err.message : String(err)
+    const isOverload  = msg.includes('alta demanda') || msg.includes('503')
+    const isTimeout   = msg.includes('timeout') || msg.includes('canceled') || msg.includes('AbortError')
+    const isConfig    = msg.includes('VITE_GEMINI_API_KEY') || msg.includes('401') || msg.includes('403')
+
+    validationReasoning.value = isOverload
+      ? 'O serviço de IA está sobrecarregado no momento. Aguarde alguns segundos e tente enviar a foto novamente.'
+      : isTimeout
+        ? 'A análise demorou mais que o esperado. Tente novamente — costuma funcionar na segunda tentativa.'
+        : isConfig
+          ? 'Chave de API Gemini inválida ou ausente. Verifique a variável VITE_GEMINI_API_KEY no .env.local.'
+          : 'Não foi possível contatar o serviço de validação. Tente novamente em instantes.'
+
+    validationWarnings.value = isOverload || isTimeout
+      ? ['Aguarde alguns segundos antes de tentar novamente', 'Tente usar uma foto menor ou com menos detalhes']
+      : []
+
+    step.value = "rejected"
+    console.error("[PhotoValidation] Erro na API Gemini:", err)
+  }
 }
 
 function collectPoints() {
@@ -166,7 +204,7 @@ function retry() {
             </div>
             <h3 class="validate-title">Validando sua comprovação...</h3>
             <p class="validate-sub">
-              Nossa verificação inteligente está analisando a foto e os dados da ação.
+              A IA Gemini está analisando a foto e verificando a autenticidade da ação.
             </p>
 
             <div class="val-progress-wrap">
@@ -184,7 +222,7 @@ function retry() {
                 <i class="fa-solid" :class="validationProgress > 45 ? 'fa-check' : 'fa-circle-notch'" aria-hidden="true" /> Identificando elementos da ação
               </li>
               <li :class="{ done: validationProgress > 75 }">
-                <i class="fa-solid" :class="validationProgress > 75 ? 'fa-check' : 'fa-circle-notch'" aria-hidden="true" /> Checando duplicidade
+                <i class="fa-solid" :class="validationProgress > 75 ? 'fa-check' : 'fa-circle-notch'" aria-hidden="true" /> Checando autenticidade com IA
               </li>
               <li :class="{ done: validationProgress >= 99 }">
                 <i class="fa-solid" :class="validationProgress >= 99 ? 'fa-check' : 'fa-circle-notch'" aria-hidden="true" /> Atribuindo pontuação
@@ -201,6 +239,17 @@ function retry() {
               Parabéns! Sua ação foi confirmada e você ganhou
               <strong>+{{ actionPoints }} pontos</strong>.
             </p>
+            <div v-if="validationReasoning" class="ai-feedback approved-feedback">
+              <i class="fa-solid fa-robot" aria-hidden="true" />
+              <span>{{ validationReasoning }}</span>
+            </div>
+            <div v-if="validationConfidence > 0" class="confidence-bar-wrap">
+              <span class="confidence-label">Confiança da IA</span>
+              <div class="confidence-bar">
+                <div class="confidence-fill" :style="{ width: (validationConfidence * 100) + '%' }" />
+              </div>
+              <span class="confidence-pct">{{ Math.round(validationConfidence * 100) }}%</span>
+            </div>
             <button class="btn-primary collect-btn" @click="collectPoints">
               <i class="fa-solid fa-trophy" aria-hidden="true" /> Resgatar meus pontos
             </button>
@@ -211,16 +260,19 @@ function retry() {
               <i class="fa-solid fa-circle-xmark" aria-hidden="true" />
             </div>
             <h3 class="result-title">Não foi possível validar</h3>
-            <p class="result-sub">
-              A imagem enviada não parece comprovar a realização desta ação específica.
-            </p>
-            <div class="rejected-tips">
-              <p>Dicas para aprovação:</p>
-              <ul>
-                <li>Envie uma foto nítida e bem iluminada</li>
-                <li>Mostre claramente a ação sendo realizada</li>
-                <li>Evite capturas de tela ou fotos de internet</li>
-              </ul>
+            <div class="ai-feedback rejected-feedback">
+              <i class="fa-solid fa-robot" aria-hidden="true" />
+              <div class="rejected-feedback-body">
+                <span v-if="validationReasoning">{{ validationReasoning }}</span>
+                <ul v-if="validationWarnings.length" class="feedback-tips">
+                  <li v-for="w in validationWarnings" :key="w">{{ w }}</li>
+                </ul>
+                <ul v-else class="feedback-tips">
+                  <li>Envie uma foto nítida e bem iluminada</li>
+                  <li>Mostre claramente a ação sendo realizada</li>
+                  <li>Evite capturas de tela ou fotos de internet</li>
+                </ul>
+              </div>
             </div>
             <div class="result-actions">
               <button class="btn-secondary" @click="emit('close')">Cancelar</button>
@@ -394,15 +446,40 @@ function retry() {
 
 .collect-btn { margin-top: 0.5rem; font-size: 0.875rem; }
 
-.rejected-tips {
-  background: #fef2f2; border: 1px solid #fecaca;
-  border-radius: var(--radius); padding: 0.75rem 1rem;
-  text-align: left; width: 100%; max-width: 320px;
-  margin-top: 0.25rem;
-}
-.rejected-tips p { margin: 0 0 0.25rem; font-size: 0.8125rem; font-weight: 600; color: var(--color-destructive); }
-.rejected-tips ul { margin: 0; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.25rem; }
-.rejected-tips li { font-size: 0.75rem; color: #78716c; }
-
 .result-actions { display: flex; gap: 0.625rem; margin-top: 0.25rem; }
+
+/* AI Feedback */
+.ai-feedback {
+  display: flex; align-items: flex-start; gap: 0.5rem;
+  border-radius: var(--radius); padding: 0.75rem 0.875rem;
+  font-size: 0.8rem; line-height: 1.5; width: 100%; max-width: 360px;
+  text-align: left;
+}
+.ai-feedback > i { flex-shrink: 0; margin-top: 0.15rem; }
+.approved-feedback { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+.rejected-feedback { background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; }
+
+.rejected-feedback-body { display: flex; flex-direction: column; gap: 0.375rem; }
+
+.feedback-tips {
+  margin: 0.25rem 0 0; padding-left: 1.125rem;
+  display: flex; flex-direction: column; gap: 0.2rem;
+}
+.feedback-tips li { font-size: 0.75rem; }
+
+/* Confidence bar */
+.confidence-bar-wrap {
+  display: flex; align-items: center; gap: 0.5rem;
+  width: 100%; max-width: 260px; margin-top: 0.25rem;
+}
+.confidence-label { font-size: 0.7rem; color: #78716c; white-space: nowrap; }
+.confidence-bar {
+  flex: 1; height: 5px; background: #e7e5e4;
+  border-radius: var(--radius); overflow: hidden;
+}
+.confidence-fill {
+  height: 100%; background: var(--color-primary);
+  border-radius: var(--radius); transition: width 0.6s ease;
+}
+.confidence-pct { font-size: 0.7rem; font-weight: 600; color: var(--color-primary); min-width: 28px; }
 </style>

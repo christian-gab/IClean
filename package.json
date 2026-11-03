@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.3.1",
+    "@google/genai": "^2.32.0",
     "@tailwindcss/vite": "^4.3.3",
     "axios": "^1.20.0",
     "pinia": "^4.0.3",
