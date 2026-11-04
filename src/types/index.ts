@@ -18,11 +18,11 @@ export type PostCategory =
 
 export const CATEGORY_LABELS: Record<PostCategory, string> = {
   recycling: 'Reciclagem',
-  water: 'Economia de Agua',
-  plastic: 'Reducao de Plastico',
+  water: 'Economia de Água',
+  plastic: 'Redução de Plástico',
   consumption: 'Consumo Consciente',
-  preservation: 'Preservacao Ambiental',
-  other: 'Outras Acoes',
+  preservation: 'Preservação Ambiental',
+  other: 'Outras Ações',
 }
 
 export const CATEGORY_COLORS: Record<PostCategory, string> = {

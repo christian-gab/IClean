@@ -3,8 +3,8 @@ import type { Level } from '@/types'
 export const levels: Level[] = [
   { name: 'Semente', minPoints: 0, maxPoints: 99, icon: 'Sprout', color: '#a8a29e' },
   { name: 'Broto', minPoints: 100, maxPoints: 299, icon: 'Leaf', color: '#22c55e' },
-  { name: 'Arvore', minPoints: 300, maxPoints: 699, icon: 'Trees', color: '#16a34a' },
-  { name: 'Guardiao Ambiental', minPoints: 700, maxPoints: 99999, icon: 'Globe', color: '#15803d' },
+  { name: 'Árvore', minPoints: 300, maxPoints: 699, icon: 'Trees', color: '#16a34a' },
+  { name: 'Guardião Ambiental', minPoints: 700, maxPoints: 99999, icon: 'Globe', color: '#15803d' },
 ]
 
 export function getLevelForPoints(points: number): Level {

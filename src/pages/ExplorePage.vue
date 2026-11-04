@@ -126,6 +126,7 @@ onMounted(() => {
         v-if="proofModal"
         :action-id="proofModal.action.id"
         :action-title="proofModal.action.title"
+        :action-description="proofModal.action.description"
         :action-points="proofModal.action.points"
         :action-icon="proofModal.icon"
         @close="proofModal = null"

@@ -4,9 +4,9 @@ export function timeAgo(dateStr: string): string {
   const diff = Math.floor((now.getTime() - date.getTime()) / 1000)
 
   if (diff < 60) return 'agora mesmo'
-  if (diff < 3600) return `${Math.floor(diff / 60)}min atras`
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h atras`
-  if (diff < 2592000) return `${Math.floor(diff / 86400)}d atras`
+  if (diff < 3600) return `${Math.floor(diff / 60)}min atrás`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h atrás`
+  if (diff < 2592000) return `${Math.floor(diff / 86400)}d atrás`
   return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
 }
 
