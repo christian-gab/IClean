@@ -21,6 +21,7 @@ const pageTitle = computed(() => {
     home: 'Feed',
     explore: 'Explorar',
     points: 'Pontos e Conquistas',
+    ranking: 'Ranking',
     profile: 'Meu Perfil',
   }
   return titles[route.name as string] ?? 'Iclean'

@@ -26,8 +26,8 @@ async function handleRegister() {
     error.value = "Informe seu e-mail."
     return
   }
-  if (!password.value || password.value.length < 6) {
-    error.value = "A senha deve ter no mínimo 6 caracteres."
+  if (!password.value || password.value.length < 8) {
+    error.value = "A senha deve ter no mínimo 8 caracteres."
     return
   }
   if (password.value !== confirmPassword.value) {
@@ -124,6 +124,7 @@ async function handleRegister() {
                 type="text"
                 class="field-input"
                 placeholder="Ex: Ana Oliveira"
+                maxlength="150"
                 autocomplete="name"
               />
             </div>
@@ -139,6 +140,7 @@ async function handleRegister() {
                 type="email"
                 class="field-input"
                 placeholder="voce@email.com"
+                maxlength="254"
                 autocomplete="email"
               />
             </div>
@@ -153,7 +155,8 @@ async function handleRegister() {
                 v-model="password"
                 :type="showPassword ? 'text' : 'password'"
                 class="field-input field-input--pass"
-                placeholder="Mínimo 6 caracteres"
+                placeholder="Mínimo 8 caracteres"
+                maxlength="128"
                 autocomplete="new-password"
               />
               <button
@@ -178,6 +181,7 @@ async function handleRegister() {
                 :type="showConfirm ? 'text' : 'password'"
                 class="field-input field-input--pass"
                 placeholder="Repita a senha"
+                maxlength="128"
                 autocomplete="new-password"
               />
               <button

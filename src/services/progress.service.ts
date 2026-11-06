@@ -24,6 +24,23 @@ export interface AchievementsResponse {
   }
 }
 
+export interface LeaderboardEntry {
+  id: string
+  name: string
+  username: string
+  avatarUrl: string
+  totalPoints: number
+  rank: number
+}
+
+export interface LeaderboardResponse {
+  status: string
+  results: number
+  data: {
+    leaderboard: LeaderboardEntry[]
+  }
+}
+
 export const progressService = {
   async getProgress(): Promise<UserProgress> {
     const { data } = await httpClient.get<ProgressResponse>('/progress')
@@ -38,6 +55,11 @@ export const progressService = {
   async getAchievements(): Promise<(Achievement & { unlocked?: boolean })[]> {
     const { data } = await httpClient.get<AchievementsResponse>('/achievements')
     return data.data.achievements
+  },
+
+  async getLeaderboard(): Promise<LeaderboardEntry[]> {
+    const { data } = await httpClient.get<LeaderboardResponse>('/progress/leaderboard')
+    return data.data.leaderboard
   },
 
 }

@@ -80,16 +80,16 @@ async function submitForValidation() {
     validationProgress.value = 0
 
     const msg = err instanceof Error ? err.message : String(err)
-    const isOverload  = msg.includes('alta demanda') || msg.includes('503')
-    const isTimeout   = msg.includes('timeout') || msg.includes('canceled') || msg.includes('AbortError')
-    const isConfig    = msg.includes('VITE_GEMINI_API_KEY') || msg.includes('401') || msg.includes('403')
+    const isOverload = msg.includes('alta demanda') || msg.includes('503')
+    const isTimeout = msg.includes('timeout') || msg.includes('canceled') || msg.includes('AbortError')
+    const isAuthError = msg.includes('Não autenticado') || msg.includes('401')
 
     validationReasoning.value = isOverload
       ? 'O serviço de IA está sobrecarregado no momento. Aguarde alguns segundos e tente enviar a foto novamente.'
       : isTimeout
         ? 'A análise demorou mais que o esperado. Tente novamente — costuma funcionar na segunda tentativa.'
-        : isConfig
-          ? 'Chave de API Gemini inválida ou ausente. Verifique a variável VITE_GEMINI_API_KEY no .env.local.'
+        : isAuthError
+          ? 'Sua sessão expirou. Entre novamente para validar a foto.'
           : 'Não foi possível contatar o serviço de validação. Tente novamente em instantes.'
 
     validationWarnings.value = isOverload || isTimeout

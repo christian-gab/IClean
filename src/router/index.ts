@@ -35,6 +35,11 @@ const router = createRouter({
           component: () => import('@/pages/PointsPage.vue'),
         },
         {
+          path: 'ranking',
+          name: 'ranking',
+          component: () => import('@/pages/RankingPage.vue'),
+        },
+        {
           path: 'perfil',
           name: 'profile',
           component: () => import('@/pages/ProfilePage.vue'),

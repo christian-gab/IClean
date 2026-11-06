@@ -14,13 +14,10 @@ export const httpClient = axios.create({
 httpClient.interceptors.request.use(
   (config) => {
     try {
-      const parsed = storage.get<{ token?: string; user?: { id?: string } }>('auth', {})
+      const parsed = storage.get<{ token?: string }>('auth', {})
 
       if (parsed?.token) {
         config.headers.Authorization = `Bearer ${parsed.token}`
-      }
-      if (parsed?.user?.id) {
-        config.headers['x-user-id'] = parsed.user.id
       }
     } catch (e) {
       console.warn('Erro ao ler credenciais do localStorage:', e)

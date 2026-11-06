@@ -7,6 +7,7 @@ const navItems = [
   { to: '/', name: 'home', label: 'Feed', icon: 'fa-house' },
   { to: '/explorar', name: 'explore', label: 'Explorar', icon: 'fa-compass' },
   { to: '/pontos', name: 'points', label: 'Pontos', icon: 'fa-trophy' },
+  { to: '/ranking', name: 'ranking', label: 'Ranking', icon: 'fa-ranking-star' },
   { to: '/perfil', name: 'profile', label: 'Perfil', icon: 'fa-user' },
 ]
 </script>

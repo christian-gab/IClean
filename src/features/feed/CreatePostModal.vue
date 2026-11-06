@@ -16,12 +16,49 @@ const progress = useProgressStore()
 const text = ref('')
 const category = ref<PostCategory>('other')
 const imageUrl = ref('')
+const imageInput = ref<HTMLInputElement | null>(null)
 const showPreview = ref(false)
 const isPosting = ref(false)
 
 const categories = Object.entries(CATEGORY_LABELS) as [PostCategory, string][]
 
 const canSubmit = computed(() => text.value.trim().length >= 10)
+
+function pickImage() {
+  imageInput.value?.click()
+}
+
+function onImageChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  if (!file.type.startsWith('image/')) {
+    progress.addToast({ message: 'Selecione um arquivo de imagem.', type: 'default' })
+    input.value = ''
+    return
+  }
+
+  const reader = new FileReader()
+  reader.onload = () => {
+    if (typeof reader.result === 'string') {
+      imageUrl.value = reader.result
+    } else {
+      progress.addToast({ message: 'Não foi possível carregar essa imagem. Tente novamente.', type: 'default' })
+    }
+    input.value = ''
+  }
+  reader.onerror = () => {
+    progress.addToast({ message: 'Não foi possível carregar essa imagem. Tente novamente.', type: 'default' })
+    input.value = ''
+  }
+  reader.readAsDataURL(file)
+}
+
+function removeImage() {
+  imageUrl.value = ''
+  if (imageInput.value) imageInput.value.value = ''
+}
 
 function closeModal() {
   emit('close')
@@ -107,16 +144,28 @@ async function submitPost() {
             </div>
 
             <div class="form-row">
-              <label class="form-label label-ds">
-                <i class="fa-solid fa-image" aria-hidden="true" /> URL de imagem (opcional)
+              <label class="form-label label-ds" for="post-image-file">
+                <i class="fa-solid fa-image" aria-hidden="true" /> Imagem (opcional)
               </label>
               <input
-                v-model="imageUrl"
-                type="url"
-                placeholder="https://..."
-                class="form-input"
-                id="post-image-url"
+                ref="imageInput"
+                id="post-image-file"
+                class="file-input"
+                type="file"
+                accept="image/*"
+                @change="onImageChange"
               />
+              <div class="image-picker">
+                <button type="button" class="btn-secondary" @click="pickImage">
+                  <i class="fa-solid fa-upload" aria-hidden="true" />
+                  {{ imageUrl ? 'Trocar imagem' : 'Escolher imagem' }}
+                </button>
+                <button v-if="imageUrl" type="button" class="btn-ghost" @click="removeImage">
+                  Remover
+                </button>
+              </div>
+              <span class="image-hint">Escolha uma imagem do seu dispositivo.</span>
+              <img v-if="imageUrl" :src="imageUrl" alt="Prévia da imagem selecionada" class="preview-image selected-image-preview" />
             </div>
           </div>
 
@@ -235,6 +284,19 @@ async function submitPost() {
 }
 
 .form-select:focus, .form-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 1px var(--color-primary); }
+
+.file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.image-picker { display: flex; align-items: center; gap: 0.5rem; }
+.image-hint { color: #78716c; font-size: 0.75rem; }
 
 .preview-card {
   padding: 0.875rem 1rem;
