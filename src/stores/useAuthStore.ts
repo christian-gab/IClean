@@ -110,6 +110,46 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function sendVerification(name: string, email: string, password: string): Promise<void> {
+    isLoading.value = true
+    error.value = null
+    try {
+      await authService.sendVerification(name, email, password)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Falha ao enviar código'
+      error.value = msg
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function verifyAndRegister(name: string, email: string, password: string, code: string): Promise<User> {
+    isLoading.value = true
+    error.value = null
+    try {
+      const data = await authService.verifyAndRegister(name, email, password, code)
+      user.value = data.user
+      token.value = data.token
+      isLoggedIn.value = true
+      save()
+      try {
+        const progressStore = useProgressStore()
+        progressStore.resetToDefault()
+        progressStore.loadAllGamificationData()
+      } catch (e) {
+        console.warn('Erro ao carregar dados de gamificação:', e)
+      }
+      return data.user
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Falha ao verificar código'
+      error.value = msg
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   function logout() {
     user.value = null
     token.value = null
@@ -151,6 +191,8 @@ export const useAuthStore = defineStore('auth', () => {
     error,
     login,
     register,
+    sendVerification,
+    verifyAndRegister,
     logout,
     fetchMe,
     updateProfile,

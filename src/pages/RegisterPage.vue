@@ -6,47 +6,129 @@ import { useAuthStore } from "@/stores/useAuthStore"
 const router = useRouter()
 const auth = useAuthStore()
 
+// Passo 1 — dados do formulário
 const name = ref("")
 const email = ref("")
 const password = ref("")
 const confirmPassword = ref("")
 const showPassword = ref(false)
 const showConfirm = ref(false)
+
+// Passo 2 — verificação
+const step = ref<1 | 2>(1)
+const code = ref("")
+const codeInputs = ref<string[]>(["", "", "", "", "", ""])
+const codeRefs = ref<HTMLInputElement[]>([])
+const isResending = ref(false)
+const resendCooldown = ref(0)
+let cooldownTimer: ReturnType<typeof setInterval> | null = null
+
 const error = ref("")
 const isLoading = ref(false)
+
+function handleCodeInput(index: number, event: Event) {
+  const val = (event.target as HTMLInputElement).value.replace(/\D/g, "")
+  codeInputs.value[index] = val.slice(-1)
+  code.value = codeInputs.value.join("")
+  if (val && index < 5) {
+    codeRefs.value[index + 1]?.focus()
+  }
+}
+
+function handleCodeKeydown(index: number, event: KeyboardEvent) {
+  if (event.key === "Backspace" && !codeInputs.value[index] && index > 0) {
+    codeInputs.value[index - 1] = ""
+    code.value = codeInputs.value.join("")
+    codeRefs.value[index - 1]?.focus()
+  }
+}
+
+function handleCodePaste(event: ClipboardEvent) {
+  event.preventDefault()
+  const pasted = (event.clipboardData?.getData("text") ?? "").replace(/\D/g, "").slice(0, 6)
+  pasted.split("").forEach((char, i) => {
+    codeInputs.value[i] = char
+  })
+  code.value = codeInputs.value.join("")
+  const nextEmpty = pasted.length < 6 ? pasted.length : 5
+  codeRefs.value[nextEmpty]?.focus()
+}
+
+function startCooldown() {
+  resendCooldown.value = 60
+  if (cooldownTimer) clearInterval(cooldownTimer)
+  cooldownTimer = setInterval(() => {
+    resendCooldown.value -= 1
+    if (resendCooldown.value <= 0 && cooldownTimer) {
+      clearInterval(cooldownTimer)
+      cooldownTimer = null
+    }
+  }, 1000)
+}
 
 async function handleRegister() {
   error.value = ""
 
-  if (!name.value.trim()) {
-    error.value = "Informe seu nome completo."
-    return
-  }
-  if (!email.value.trim()) {
-    error.value = "Informe seu e-mail."
-    return
-  }
-  if (!password.value || password.value.length < 8) {
-    error.value = "A senha deve ter no mínimo 8 caracteres."
-    return
-  }
-  if (password.value !== confirmPassword.value) {
-    error.value = "As senhas não coincidem."
-    return
-  }
+  if (!name.value.trim()) { error.value = "Informe seu nome completo."; return }
+  if (!email.value.trim()) { error.value = "Informe seu e-mail."; return }
+  if (!password.value || password.value.length < 8) { error.value = "A senha deve ter no mínimo 8 caracteres."; return }
+  if (password.value !== confirmPassword.value) { error.value = "As senhas não coincidem."; return }
 
   isLoading.value = true
   try {
-    await auth.register(name.value.trim(), email.value.trim(), password.value)
-    router.push("/")
+    await auth.sendVerification(name.value.trim(), email.value.trim(), password.value)
+    step.value = 2
+    startCooldown()
   } catch (err: unknown) {
-    error.value =
-      err instanceof Error
-        ? err.message
-        : "Falha ao criar conta. Verifique se o backend está rodando."
+    error.value = err instanceof Error ? err.message : "Falha ao enviar código. Verifique se o backend está rodando."
   } finally {
     isLoading.value = false
   }
+}
+
+async function handleVerify() {
+  error.value = ""
+  if (code.value.length !== 6) { error.value = "Digite o código de 6 dígitos."; return }
+
+  isLoading.value = true
+  try {
+    await auth.verifyAndRegister(name.value.trim(), email.value.trim(), password.value, code.value)
+    router.push("/")
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : "Falha ao verificar código."
+    // Limpa o código para nova tentativa
+    codeInputs.value = ["", "", "", "", "", ""]
+    code.value = ""
+    setTimeout(() => codeRefs.value[0]?.focus(), 50)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+async function handleResend() {
+  if (resendCooldown.value > 0 || isResending.value) return
+  error.value = ""
+  isResending.value = true
+  try {
+    await auth.sendVerification(name.value.trim(), email.value.trim(), password.value)
+    startCooldown()
+    codeInputs.value = ["", "", "", "", "", ""]
+    code.value = ""
+    setTimeout(() => codeRefs.value[0]?.focus(), 50)
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : "Falha ao reenviar código."
+  } finally {
+    isResending.value = false
+  }
+}
+
+function goBack() {
+  step.value = 1
+  error.value = ""
+  code.value = ""
+  codeInputs.value = ["", "", "", "", "", ""]
+  if (cooldownTimer) { clearInterval(cooldownTimer); cooldownTimer = null }
+  resendCooldown.value = 0
 }
 </script>
 
@@ -105,7 +187,8 @@ async function handleRegister() {
         <span class="brand-name brand-name--dark">Iclean</span>
       </div>
 
-      <div class="form-container">
+      <!-- PASSO 1: Formulário de cadastro -->
+      <div v-if="step === 1" class="form-container">
         <div class="form-header">
           <h2 class="form-title">Criar conta</h2>
           <p class="form-sub">
@@ -203,7 +286,7 @@ async function handleRegister() {
           <button type="submit" class="btn-submit" :disabled="isLoading" id="btn-register-submit">
             <span v-if="isLoading" class="spinner" />
             <template v-else>
-              <span>Criar conta</span>
+              <span>Continuar</span>
               <i class="fa-solid fa-arrow-right btn-arrow" aria-hidden="true" />
             </template>
           </button>
@@ -212,6 +295,68 @@ async function handleRegister() {
         <p class="form-footer">
           Já tem uma conta?
           <router-link to="/login" class="form-link">Entrar</router-link>
+        </p>
+      </div>
+
+      <!-- PASSO 2: Verificação de código -->
+      <div v-else class="form-container">
+        <div class="form-header">
+          <button class="back-btn" type="button" @click="goBack" aria-label="Voltar">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true" />
+          </button>
+          <div class="verify-icon-wrap">
+            <i class="fa-solid fa-envelope-circle-check verify-icon" aria-hidden="true" />
+          </div>
+          <h2 class="form-title">Verifique seu e-mail</h2>
+          <p class="form-sub">
+            Enviamos um código de 6 dígitos para<br />
+            <strong class="email-highlight">{{ email }}</strong>
+          </p>
+        </div>
+
+        <form class="reg-form" @submit.prevent="handleVerify" novalidate>
+          <div class="code-field">
+            <input
+              v-for="(_, i) in codeInputs"
+              :key="i"
+              :ref="el => { if (el) codeRefs[i] = el as HTMLInputElement }"
+              class="code-input"
+              type="text"
+              inputmode="numeric"
+              maxlength="1"
+              :value="codeInputs[i]"
+              @input="handleCodeInput(i, $event)"
+              @keydown="handleCodeKeydown(i, $event)"
+              @paste="i === 0 ? handleCodePaste($event) : undefined"
+              :aria-label="`Dígito ${i + 1} do código`"
+            />
+          </div>
+
+          <transition name="shake">
+            <p v-if="error" class="reg-error" role="alert">{{ error }}</p>
+          </transition>
+
+          <button type="submit" class="btn-submit" :disabled="isLoading || code.length !== 6">
+            <span v-if="isLoading" class="spinner" />
+            <template v-else>
+              <span>Verificar e criar conta</span>
+              <i class="fa-solid fa-check btn-arrow" aria-hidden="true" />
+            </template>
+          </button>
+        </form>
+
+        <p class="form-footer">
+          Não recebeu o código?
+          <button
+            class="form-link resend-btn"
+            type="button"
+            :disabled="resendCooldown > 0 || isResending"
+            @click="handleResend"
+          >
+            <span v-if="isResending">Enviando…</span>
+            <span v-else-if="resendCooldown > 0">Reenviar em {{ resendCooldown }}s</span>
+            <span v-else>Reenviar código</span>
+          </button>
         </p>
       </div>
     </div>
@@ -540,5 +685,86 @@ async function handleRegister() {
   }
   .mobile-brand { display: flex; }
   .form-container { max-width: 400px; }
+}
+
+/* ── Passo 2: botão voltar ───────────────────────────────── */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 0.875rem;
+  padding: 0;
+  margin-bottom: 1.25rem;
+  transition: color 0.15s ease;
+}
+.back-btn:hover { color: #15803d; }
+
+/* ── Passo 2: ícone de email ─────────────────────────────── */
+.verify-icon-wrap {
+  width: 56px;
+  height: 56px;
+  background: #f0fdf4;
+  border: 2px solid #bbf7d0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0 1rem;
+}
+.verify-icon {
+  font-size: 1.5rem;
+  color: #15803d;
+}
+
+/* ── Passo 2: destaque do email ──────────────────────────── */
+.email-highlight {
+  color: #15803d;
+  word-break: break-all;
+}
+
+/* ── Passo 2: inputs de código ───────────────────────────── */
+.code-field {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin: 0.5rem 0;
+}
+.code-input {
+  width: 46px;
+  height: 54px;
+  text-align: center;
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #111827;
+  background: white;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  caret-color: transparent;
+}
+.code-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+.code-input:not(:placeholder-shown) {
+  border-color: #15803d;
+}
+
+/* ── Passo 2: botão reenviar ─────────────────────────────── */
+.resend-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+}
+.resend-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

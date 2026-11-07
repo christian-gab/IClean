@@ -34,6 +34,27 @@ export const authService = {
     return data.data
   },
 
+  /** Passo 1: envia o código de verificação para o email. */
+  async sendVerification(name: string, email: string, password: string): Promise<void> {
+    await httpClient.post('/auth/send-verification', { name, email, password })
+  },
+
+  /** Passo 2: verifica o código e cria a conta. */
+  async verifyAndRegister(
+    name: string,
+    email: string,
+    password: string,
+    code: string
+  ): Promise<{ user: User; token: string }> {
+    const { data } = await httpClient.post<LoginResponse>('/auth/verify-email', {
+      name,
+      email,
+      password,
+      code,
+    })
+    return data.data
+  },
+
   async getMe(): Promise<User> {
     const { data } = await httpClient.get<UserResponse>('/auth/me')
     return data.data.user
@@ -49,3 +70,4 @@ export const authService = {
     return data.data.user
   },
 }
+
