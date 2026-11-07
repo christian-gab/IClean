@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import type { Post } from '@/types'
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '@/types'
 import { useFeedStore } from '@/stores/useFeedStore'
@@ -9,6 +10,7 @@ import { timeAgo } from '@/utils/date'
 const props = defineProps<{ post: Post }>()
 const feed = useFeedStore()
 const auth = useAuthStore()
+const router = useRouter()
 
 const showComments = ref(false)
 const commentText = ref('')
@@ -17,6 +19,14 @@ const isSubmitting = ref(false)
 const isAuthorMe = computed(() => !!auth.user && props.post.authorId === auth.user.id)
 const authorName = computed(() => (isAuthorMe.value ? auth.user!.name : props.post.authorName))
 const authorAvatarUrl = computed(() => (isAuthorMe.value ? auth.user!.avatarUrl : props.post.authorAvatarUrl))
+
+function navigateToProfile() {
+  if (isAuthorMe.value) {
+    router.push({ name: 'profile' })
+  } else {
+    router.push({ name: 'user-profile', params: { userId: props.post.authorId } })
+  }
+}
 
 function getCommentAuthorName(comment: { authorId: string; authorName: string }) {
   if (auth.user && comment.authorId === auth.user.id) {
@@ -74,9 +84,11 @@ async function share() {
 <template>
   <article class="card-ds post-card">
     <div class="post-header">
-      <img :src="authorAvatarUrl" :alt="authorName" class="avatar" width="38" height="38" />
+      <button class="avatar-btn" @click="navigateToProfile" :aria-label="`Ver perfil de ${authorName}`">
+        <img :src="authorAvatarUrl" :alt="authorName" class="avatar" width="38" height="38" />
+      </button>
       <div class="post-meta">
-        <span class="author-name">{{ authorName }}</span>
+        <button class="author-name-btn" @click="navigateToProfile">{{ authorName }}</button>
         <span class="post-time">{{ timeAgo(post.createdAt) }}</span>
       </div>
       <span class="category-badge" :style="{ background: categoryColor + '15', color: categoryColor }">
@@ -170,6 +182,42 @@ async function share() {
   font-size: 0.875rem;
   font-weight: 600;
   color: #1c1917;
+}
+
+.avatar-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  transition: opacity 0.15s, transform 0.15s;
+  flex-shrink: 0;
+}
+
+.avatar-btn:hover {
+  opacity: 0.85;
+  transform: scale(1.05);
+}
+
+.author-name-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1c1917;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s;
+  font-family: inherit;
+  line-height: 1.3;
+}
+
+.author-name-btn:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
 }
 
 .post-time {
