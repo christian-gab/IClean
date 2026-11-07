@@ -19,6 +19,7 @@ type Step = "upload" | "validating" | "approved" | "rejected"
 const step = ref<Step>("upload")
 const description = ref("")
 const imagePreview = ref<string | null>(null)
+const fileError = ref("")
 const fileInput = ref<HTMLInputElement | null>(null)
 const validationProgress = ref(0)
 const progressInterval = ref<ReturnType<typeof setInterval> | null>(null)
@@ -33,18 +34,29 @@ function pickFile() {
 }
 
 function onFileChange(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0]
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
   if (!file) return
-  if (!file.type.startsWith("image/")) return
+  if (file.type !== "image/jpeg") {
+    fileError.value = "Formato não compatível. Escolha uma imagem JPEG (.jpg ou .jpeg)."
+    input.value = ""
+    return
+  }
+  fileError.value = ""
   const reader = new FileReader()
   reader.onload = () => {
     imagePreview.value = reader.result as string
+  }
+  reader.onerror = () => {
+    fileError.value = "Não foi possível carregar essa imagem. Tente novamente."
+    input.value = ""
   }
   reader.readAsDataURL(file)
 }
 
 function removeImage() {
   imagePreview.value = null
+  fileError.value = ""
   if (fileInput.value) fileInput.value.value = ""
 }
 
@@ -153,7 +165,7 @@ function retry() {
               <div v-else class="photo-placeholder">
                 <i class="fa-solid fa-camera photo-camera-icon" aria-hidden="true" />
                 <p>Toque para tirar ou enviar uma foto</p>
-                <span class="photo-hint">JPG, PNG, WEBP — máx 10 MB</span>
+                <span class="photo-hint">Somente JPG/JPEG — máx 10 MB</span>
               </div>
               <button v-if="imagePreview" class="remove-photo" @click.stop="removeImage" aria-label="Remover foto">
                 <i class="fa-solid fa-xmark" aria-hidden="true" />
@@ -167,11 +179,12 @@ function retry() {
             <input
               ref="fileInput"
               type="file"
-              accept="image/*"
+              accept="image/jpeg,.jpg,.jpeg"
               capture="environment"
               style="display:none"
               @change="onFileChange"
             />
+            <p v-if="fileError" class="file-error" role="alert">{{ fileError }}</p>
 
             <div class="field">
               <label class="field-label label-ds" for="proof-desc">Descrição (opcional)</label>
@@ -364,6 +377,7 @@ function retry() {
 .photo-camera-icon { color: #a8a29e; font-size: 1.5rem; }
 .photo-placeholder p { margin: 0; font-size: 0.8125rem; color: #57534e; font-weight: 500; }
 .photo-hint { font-size: 0.6875rem; color: #78716c; }
+.file-error { margin: 0; color: var(--color-destructive); font-size: 0.75rem; }
 
 .photo-preview {
   width: 100%; max-height: 220px;
